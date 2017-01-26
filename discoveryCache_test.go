@@ -6,6 +6,7 @@ import (
 	//"log"
 
 	"fmt"
+	"log"
 )
 
 //http://172.17.0.2:8080/eureka/
@@ -74,4 +75,5 @@ func TestNewDiscoveryCache(t *testing.T){
 	if vipInst.ID != inst.ID {
 		t.Errorf("ids of instances not equal")
 	}
+	log.Printf("inst id  = %s", vipInst.ID)
 }

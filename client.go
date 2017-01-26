@@ -26,6 +26,7 @@ import (
 "strings"
 "sync"
 "time"
+	"bytes"
 )
 
 const (
@@ -176,6 +177,7 @@ func (cl *client) fetchAll() (dictionary, error) {
 	if apps != nil && apps.Application != nil {
 		for _, app := range apps.Application {
 			for _, inst := range app.Instances {
+				log.Printf("id = %s",inst.ID)
 				id, err := resolveInstanceID(inst)
 				if err != nil {
 					log.Printf("Failed to resolve instance ID. error: %s\n", err)
@@ -277,44 +279,200 @@ func (cl *client) fetchDelta() (dictionary, map[string]*Instance) {
 	return dict, diff
 }
 
+// fetchApps function return all the applications from the server.
 func (cl *client) fetchApps(path string) (*Applications, error) {
 	var err error
 
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/%s", eurl, path), nil)
 		req.Header.Set("Accept", "application/json")
-
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
-
 			err = err2
 			continue
 		}
-
 		defer resp.Body.Close()
-
 		body, err2 := ioutil.ReadAll(resp.Body)
 		if err2 != nil {
-
 			err = err2
 			continue
 		}
-
 		var appsList ApplicationsList
 		err2 = json.Unmarshal(body, &appsList)
 		if err2 != nil {
-
-			//log.Println(body)
 			err = err2
 			continue
 		}
-
 		return appsList.Applications, nil
+	}
+	return nil, err
+}
+
+// fetchApp function fetches all applications with the name app_name, where path = "apps/app_name"
+func (cl *client) fetchApp(path string) (*Applications, error) {
+	var err error
+	for _, eurl := range cl.eurekaURLs {
+		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/%s", eurl, path), nil)
+		req.Header.Set("Accept", "application/json")
+		resp, err2 := cl.httpClient.Do(req)
+		if err2 != nil {
+			err = err2
+			continue
+		}
+		defer resp.Body.Close()
+		body, err2 := ioutil.ReadAll(resp.Body)
+		if err2 != nil {
+			err = err2
+			continue
+		}
+		var apps Applications
+		err2 = json.Unmarshal(body, &apps)
+		if err2 != nil {
+			err = err2
+			continue
+		}
+		return &apps, nil
 	}
 
 	return nil, err
 }
 
+func (cl *client) fetchInstance(appId,id string) (*Instance, error) {
+	var err error
+	path := "apps/" + appId + "/" + id
+	for _, eurl := range cl.eurekaURLs {
+		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/%s", eurl, path), nil)
+		//log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
+		req.Header.Set("Accept", "application/json")
+		resp, err2 := cl.httpClient.Do(req)
+		if err2 != nil {
+			err = err2
+			continue
+		}
+		defer resp.Body.Close()
+		body, err2 := ioutil.ReadAll(resp.Body)
+		if err2 != nil {
+			err = err2
+			continue
+		}
+		var inst InstanceWrapper
+		err2 = json.Unmarshal(body, &inst)
+		//log.Printf("Instance gotten : %v", inst)
+		if err2 != nil {
+			err = err2
+			continue
+		}
+		return inst.Inst, nil
+	}
+
+	return nil, err
+}
+func (cl *client) getListOfInstsFromAppList(appList ApplicationsList) []*Instance {
+	var instsToReturn []*Instance
+	apps := appList.Applications.Application
+	for _,app := range apps {
+		insts := app.Instances
+		for _,inst := range insts {
+			instsToReturn = append(instsToReturn, inst)
+		}
+	}
+	return instsToReturn
+}
+func (cl *client) fetchInstancesByVip(vipAddress string ) ([]*Instance, error){
+	var err error
+	path := "vips/" + vipAddress
+	for _, eurl := range cl.eurekaURLs {
+		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/%s", eurl, path), nil)
+		log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
+		req.Header.Set("Accept", "application/json")
+		resp, err2 := cl.httpClient.Do(req)
+		if err2 != nil {
+			err = err2
+			continue
+		}
+		defer resp.Body.Close()
+		body, err2 := ioutil.ReadAll(resp.Body)
+		if err2 != nil {
+			err = err2
+			continue
+		}
+		var appsList ApplicationsList
+		err2 = json.Unmarshal(body, &appsList)
+		//log.Printf("Instance gotten : %v", inst)
+		if err2 != nil {
+			err = err2
+			continue
+		}
+		insts := cl.getListOfInstsFromAppList(appsList)
+		return insts, nil
+	}
+
+	return nil, err
+}
+func (cl *client) fetchInstancesBySVip(vipAddress string ) ([]*Instance, error){
+	var err error
+	path := "svips/" + vipAddress
+	for _, eurl := range cl.eurekaURLs {
+		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/%s", eurl, path), nil)
+		log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
+		req.Header.Set("Accept", "application/json")
+		resp, err2 := cl.httpClient.Do(req)
+		if err2 != nil {
+			err = err2
+			continue
+		}
+		defer resp.Body.Close()
+		body, err2 := ioutil.ReadAll(resp.Body)
+		if err2 != nil {
+			err = err2
+			continue
+		}
+		var appsList ApplicationsList
+		err2 = json.Unmarshal(body, &appsList)
+		//log.Printf("Instance gotten : %v", inst)
+		if err2 != nil {
+			err = err2
+			continue
+		}
+		insts := cl.getListOfInstsFromAppList(appsList)
+		return insts, nil
+	}
+
+	return nil, err
+}
+func (cl* client) register(instance *Instance) error {
+	var err error
+	instanceWrapper := InstanceWrapper{Inst: instance}
+	body, err := json.Marshal(instanceWrapper)
+	str := fmt.Sprintf("%s", body)
+	log.Printf("body: %s",str)
+	r := bytes.NewReader(body)
+	appName := instance.Application
+	if err != nil {
+		return err
+	}
+	path := "apps/" + appName
+	for _, eurl := range cl.eurekaURLs {
+		req, _ := http.NewRequest("POST", fmt.Sprintf("%s/%s", eurl, path), r)
+		log.Printf("request is : %s", fmt.Sprintf("%s/%s", eurl, path))
+		req.Header.Set("Content-Type", "application/json")
+		resp, err2 := cl.httpClient.Do(req)
+		if err2 != nil {
+			err = err2
+			continue
+		}
+		//defer resp.Body.Close()
+		/*
+		body, err2 := ioutil.ReadAll(resp.Body)
+		if err2 != nil {
+			err = err2
+			continue
+		}
+		*/
+		log.Printf("response for register req : %s", resp.Status)
+	}
+	return err
+}
 func calculateHashcode(dict map[string]map[string]*Instance) string {
 	var hashcode string
 

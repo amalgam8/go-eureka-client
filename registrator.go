@@ -15,12 +15,21 @@ type registrator struct {
 }
 
 // NewRegistrator creates a new client used for instance registration
-func NewRegistrator(config *Config) (Registrator, error){
-	return nil,nil
+func NewRegistrator(config *Config,handler InstanceEventHandler) (Registrator, error){
+	registratorClient, err := newClient(config, handler)
+	if err != nil {
+		return nil,err
+	}
+
+	newRegistrator :=  &registrator{client: *registratorClient,
+	}
+
+	return newRegistrator,nil
 }
 
 // Register registers an instance in the registry.
 func (r *registrator) Register(instance *Instance)  error {
+	r.client.register(instance)
 	return nil
 }
 
@@ -40,7 +49,7 @@ func (r *registrator) SetStatus(instance *Instance,status StatusType)  error {
 }
 
 // SetMetadataKey sets the metaDataKey for an instance in the registry.
-func (r *registrator) SetMetadataKey(instance *Instance,status StatusType)  error {
+func (r *registrator) SetMetadataKey(inst *Instance, key string, value string)  error {
 	return nil
 }
 
