@@ -315,6 +315,7 @@ func (cl *client) fetchApp(path string) (*Applications, error) {
 		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/%s", eurl, path), nil)
 		req.Header.Set("Accept", "application/json")
 		resp, err2 := cl.httpClient.Do(req)
+		log.Printf("response is %v", resp)
 		if err2 != nil {
 			err = err2
 			continue
@@ -342,7 +343,7 @@ func (cl *client) fetchInstance(appId,id string) (*Instance, error) {
 	path := "apps/" + appId + "/" + id
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/%s", eurl, path), nil)
-		//log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
+		log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
 		req.Header.Set("Accept", "application/json")
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
@@ -357,7 +358,7 @@ func (cl *client) fetchInstance(appId,id string) (*Instance, error) {
 		}
 		var inst InstanceWrapper
 		err2 = json.Unmarshal(body, &inst)
-		//log.Printf("Instance gotten : %v", inst)
+		log.Printf("Instance gotten : %v", inst)
 		if err2 != nil {
 			err = err2
 			continue
@@ -472,6 +473,106 @@ func (cl* client) register(instance *Instance) error {
 		log.Printf("response for register req : %s", resp.Status)
 	}
 	return err
+}
+
+func (cl* client) deregister(instance *Instance) error {
+	var err error
+	appName :=instance.Application
+	// TODO: resolve when to take host name and when to take id ?
+	instId := instance.HostName
+	path := "apps/" + appName + "/" + instId
+	for _, eurl := range cl.eurekaURLs {
+		req, _ := http.NewRequest("DELETE", fmt.Sprintf("%s/%s", eurl, path), nil)
+		log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
+		req.Header.Set("Accept", "application/json")
+		resp, err2 := cl.httpClient.Do(req)
+		if err2 != nil {
+			err = err2
+			continue
+		}
+		log.Printf("response: %v", resp)
+		if resp.StatusCode != http.StatusOK {
+			err = fmt.Errorf("bad response for deregister request. response is %V",resp.Status)
+		}
+
+	}
+
+	return err
+}
+func (cl* client) heartbeat(instance *Instance) error {
+	var err error
+	appName :=instance.Application
+	// TODO: resolve when to take host name and when to take id ?
+	instId := instance.HostName
+	path := "apps/" + appName + "/" + instId
+	for _, eurl := range cl.eurekaURLs {
+		req, _ := http.NewRequest("PUT", fmt.Sprintf("%s/%s", eurl, path), nil)
+		log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
+		req.Header.Set("Accept", "application/json")
+		resp, err2 := cl.httpClient.Do(req)
+		if err2 != nil {
+			err = err2
+			continue
+		}
+		log.Printf("response: %v", resp)
+		if resp.StatusCode != http.StatusOK {
+			err = fmt.Errorf("bad response for heartbeat request. response is %V",resp.Status)
+		}
+
+	}
+	return err
+}
+
+func (cl* client) setStatusForInstance(instance *Instance,status StatusType) error {
+	if status != UP && status != DOWN && status != UNKNOWN && status != OUT_OF_SERVICE && status != STARTING {
+		return fmt.Errorf("requested status %v is not valid", status)
+	}
+	var err error
+	appName :=instance.Application
+	// TODO: resolve when to take host name and when to take id ?
+	instId := instance.HostName
+	path := "apps/" + appName + "/" + instId + "/status?value=" + fmt.Sprintf("%v",status)
+	for _, eurl := range cl.eurekaURLs {
+		req, _ := http.NewRequest("PUT", fmt.Sprintf("%s/%s", eurl, path), nil)
+		log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
+		req.Header.Set("Accept", "application/json")
+		resp, err2 := cl.httpClient.Do(req)
+		if err2 != nil {
+			err = err2
+			continue
+		}
+		log.Printf("response: %v", resp)
+		if resp.StatusCode != http.StatusOK {
+			err = fmt.Errorf("bad response for changing status request. response is %V",resp.Status)
+		}
+
+	}
+	return err
+}
+
+func (cl* client) setMetadataKey(inst *Instance, key string, value string) error{
+	var err error
+	appName :=inst.Application
+	// TODO: resolve when to take host name and when to take id ?
+	instId := inst.HostName
+	path := "apps/" + appName + "/" + instId + "/metadata?" + key+ "=" + value
+	for _, eurl := range cl.eurekaURLs {
+		req, _ := http.NewRequest("PUT", fmt.Sprintf("%s/%s", eurl, path), nil)
+		log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
+		req.Header.Set("Accept", "application/json")
+		resp, err2 := cl.httpClient.Do(req)
+		if err2 != nil {
+			err = err2
+			continue
+		}
+		log.Printf("response: %v", resp)
+		if resp.StatusCode != http.StatusOK {
+			err = fmt.Errorf("bad response for changing metadata request. response is %V",resp.Status)
+		}
+
+	}
+	return err
+
 }
 func calculateHashcode(dict map[string]map[string]*Instance) string {
 	var hashcode string

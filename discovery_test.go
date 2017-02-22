@@ -1,3 +1,16 @@
+// Copyright 2016 IBM Corporation
+//
+//   Licensed under the Apache License, Version 2.0 (the "License");
+//   you may not use this file except in compliance with the License.
+//   You may obtain a copy of the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//   Unless required by applicable law or agreed to in writing, software
+//   distributed under the License is distributed on an "AS IS" BASIS,
+//   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   See the License for the specific language governing permissions and
+//   limitations under the License.
 package go_eureka_client
 
 import (
@@ -5,12 +18,12 @@ import (
 	"time"
 	//"log"
 	"log"
+
 )
 
 
 
 func TestNewDiscovery(t *testing.T){
-	//func Main() {
 	conf := &Config{
 		ConnectTimeoutSeconds: 10 * time.Second,
 		UseDNSForServiceUrls :  false, // default false
@@ -21,14 +34,11 @@ func TestNewDiscovery(t *testing.T){
 		RetriesCount   :       3, // default 3
 		UseJSON  :             true, // default false (means XML)
 	}
-
 	var m mockHandler = "test"
-
 	discovery, e := NewDiscovery(conf, &m)
 	if e != nil {
 		t.Errorf("error = %v", e)
 	}
-
 	app, e := discovery.GetApplication("HELLO-NETFLIX-OSS")
 	if e != nil {
 		t.Errorf("Failed to get aplication. error : %v",e)
@@ -40,6 +50,7 @@ func TestNewDiscovery(t *testing.T){
 	if len(insts) != 1 {
 		t.Errorf("num of instances should be 1. instead : %d", len(insts))
 	}
+	log.Printf("TestNewDiscovery Completed with Success...")
 	//inst := insts[0]
 
 	//log.Printf("len of apps = %v", len(apps))
@@ -78,14 +89,12 @@ func TestDiscovery_GetInstance(t *testing.T) {
 		RetriesCount   :       3, // default 3
 		UseJSON  :             true, // default false (means XML)
 	}
-
 	var m mockHandler = "test"
-
 	discovery, e := NewDiscovery(conf, &m)
 	if e != nil {
 		t.Errorf("error = %v", e)
 	}
-	inst, err := discovery.GetInstance("HELLO-NETFLIX-OSS","ea03d743d2b4")
+	inst, err := discovery.GetInstance("HELLO-NETFLIX-OSS","849570db088d")
 	if err != nil {
 		t.Errorf("Failed to request an instance: %v", err)
 	}
@@ -109,9 +118,7 @@ func TestDiscovery_GetInstancesByVip(t *testing.T) {
 		RetriesCount   :       3, // default 3
 		UseJSON  :             true, // default false (means XML)
 	}
-
 	var m mockHandler = "test"
-
 	discovery, e := NewDiscovery(conf, &m)
 	if e != nil {
 		t.Errorf("error = %v", e)
