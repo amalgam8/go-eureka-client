@@ -58,6 +58,7 @@ func TestNewDiscovery(t *testing.T){
 	//log.Printf("inst details %v", apps[0].Instances)
 
 	//inst := insts[0]
+
 	/*
 	_,e = discoveryCache.GetInstancesBySecVip(inst.SecVIPAddr)
 	if e.Error() != fmt.Errorf("vipAddress  %s not found",inst.SecVIPAddr ).Error() {
@@ -76,6 +77,7 @@ func TestNewDiscovery(t *testing.T){
 	}
 	log.Printf("inst id  = %s", vipInst.ID)
 	*/
+
 }
 
 func TestDiscovery_GetInstance(t *testing.T) {

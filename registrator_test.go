@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 )
 
+
 func TestNewRegistrator(t *testing.T) {
 	conf := &Config{
 		ConnectTimeoutSeconds: 10 * time.Second,

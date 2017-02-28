@@ -16,25 +16,28 @@ package go_eureka_client
 // Pre requests: a eureka server available on http://172.17.0.2:8080/eureka/v2/
 
 import  (
-
 	"testing"
 	"time"
-	"log"
-	"fmt"
 )
+
+// Global test variables :
 var testRegistrator Registrator
 var testDiscovery Discovery
 var testdiscoveryCache DiscoveryCache
-var quit  chan int
+var quitHeartBeats  chan struct{}
 var errChan chan error
-
+var stopdiscoveryCacheChan chan struct{}
+var instances  []*Instance
 // function setupTest creates discovery client, discovery cache client, registrator client, and registers apps to the server.
-func setupTest() error{
+func setupTest(t *testing.T) error{
+	quitHeartBeats = make( chan struct{})
+	errChan = make(chan error)
+	stopdiscoveryCacheChan = make(chan  struct{})
 	e := createClients()
 	if e != nil {
 		return e
 	}
-	return registerInstances()
+	return registerInstances(t)
 
 }
 
@@ -61,6 +64,10 @@ func createClients() error {
 		return e
 	}
 	testdiscoveryCache,e = NewDiscoveryCache(conf,7*time.Second,&m)
+	if e != nil {
+		return e
+	}
+	testdiscoveryCache.Run(stopdiscoveryCacheChan)
 	return e
 }
 
@@ -77,8 +84,8 @@ func createInstance(hostName, appName,vipAddr, svipAddr string) *Instance {
 }
 
 // function registerInstances registers 6 instances to the server.
-func registerInstances() error {
-	instances := []*Instance{createInstance("inst1", "app1","vip1","svip1") ,
+func registerInstances(t *testing.T) error {
+	instances = []*Instance{createInstance("inst1", "app1","vip1","svip1") ,
 		createInstance("inst2", "app1","vip1","svip2") ,
 		createInstance("inst3", "app1","vip2","svip1") ,
 		createInstance("inst1", "app2","vip2","svip2"),
@@ -90,16 +97,15 @@ func registerInstances() error {
 			return e
 		}
 	}
-	go sendHeartBeats(instances)
+	go sendHeartBeats(instances,t)
 	return nil
 }
 
-func sendHeartBeats(instances []*Instance) {
+func sendHeartBeats(instances []*Instance,t *testing.T) {
 	for {
 		select {
-		case i := <- quit :
-			log.Printf("i: %d",i)
-			log.Printf("quit channel recieived, stop sending heartbeats")
+		case <- quitHeartBeats :
+			t.Log("quit channel recieived, stop sending heartbeats")
 			return
 		default:
 			for _, inst := range instances {
@@ -109,65 +115,66 @@ func sendHeartBeats(instances []*Instance) {
 					return
 				}
 			}
-			log.Printf("heartbeats sent")
+			t.Log("heartbeats sent")
 			time.Sleep(30*time.Second)
 
 		}
 	}
 }
 
-func TestCases(t *testing.T){
-	quit = make( chan int)
-	errChan = make(chan error)
-	e := setupTest()
+func tearDownTest(t *testing.T) error {
+	var stop struct{}
+
+	// Stop the go routine which sends heat-beats to instances.
+	quitHeartBeats <- stop
+
+	// Stop the discovery cache poll intervals :
+	stopdiscoveryCacheChan <- stop
+
+	// De-register all instances from server :
+	for _, inst := range instances {
+		e := testRegistrator.Deregister(inst)
+		if e!= nil {
+			t.Log("something went wrong during dregisteriation...")
+			return e
+		}
+	}
+	t.Log("Successfully de-registerd all instances from eureka server. sleep 30 seconds before return from" +
+		" function")
+	time.Sleep(30*time.Second)
+	return nil
+}
+
+
+func  TestGetInstancesByVipAddress(t *testing.T) {
+	t.Log("************************************************************************************************")
+	t.Log("Calling Setup test...")
+	e := setupTest(t)
 	if e != nil {
 		// send  quit channel :
-		quit <- 1
+		quitHeartBeats <- struct{}{}
+		stopdiscoveryCacheChan <- struct{}{}
 		t.Errorf("Error during setup : %v",e)
 		return
 	}
+	t.Log("Successfully initialized discovery, discovery cache and registrator client. sleeping 30 seconds.")
+	t.Log("************************************************************************************************")
 	time.Sleep(30*time.Second)
-	for {
-		select {
-		case e = <- errChan :
-			t.Errorf("Error during heartbeat sending: %v",e)
-		default :
-			// Test cases for discovery & discovery cache:
-			// 1 . Get instances by vip address:
-			log.Printf("Testing  Get instances by vip address... ")
-			err := testGetInstancesByVipAddress()
-			log.Printf("out")
-			if err != nil {
-				log.Printf("Sending q")
-				quit <- 1
-				log.Printf("Sending Quit signal")
-				t.Errorf("Error: %v",err)
-				return
-			}
-			log.Printf("Break... ")
-			break
-			// 2. Get instances by svip address :
 
-			// 3. Get instances by application name :
-
-			// 4. Get instances by their id :
-
-			// 5. Get all instances :
-		}
-		break
-	}
-	quit <- 1
-	log.Printf("Test Ende Successfully")
-}
-
-func  testGetInstancesByVipAddress() error {
-	log.Printf("Inside test get instance by vip address: ")
+	t.Log("Testing  Get instances by vip address... ")
 	dicoveryInstances, err := testDiscovery.GetInstancesByVip("vip1")
+
 	if err != nil {
-		return err
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Error while trying to get instances from server into discovery: %v ", err)
+		return
 	}
 	if len(dicoveryInstances) != 3 {
-		return fmt.Errorf("Should have gotten 3 instances with vip addrees vip1, instead got %d",len(dicoveryInstances))
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Should have gotten 3 instances with vip addrees vip1, instead got %d",
+			len(dicoveryInstances))
+		return
+
 	}
 	numOfInstsFromApp1 := 0
 	numOfInstsFromApp2 := 0
@@ -176,7 +183,7 @@ func  testGetInstancesByVipAddress() error {
 	numOfInstsFromsVip1 := 0
 	numOfInstsFromsVip2:= 0
 	for _, inst := range dicoveryInstances {
-		log.Print(inst.Application)
+
 		if inst.Application == "APP1" {
 			numOfInstsFromApp1++
 		}
@@ -196,10 +203,265 @@ func  testGetInstancesByVipAddress() error {
 			numOfInstsFromsVip2++
 		}
 	}
-	if numOfInstsFromApp1 !=2 || numOfInstsFromApp2 != 1 || numOfInstsFromInst1 != 1 || numOfInstsFromInst2 != 1 ||
-		numOfInstsFromsVip1 != 1 || numOfInstsFromsVip2 != 2 {
-		return fmt.Errorf("Unexpected content in the discovery instances. instances: %v",dicoveryInstances)
+	if numOfInstsFromApp1 !=2 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to app1 should be 2, insted : %d",numOfInstsFromApp1 )
+		return
+	} else if numOfInstsFromApp2 != 1 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to app2 should be 1, insted : %d",numOfInstsFromApp2 )
+		return
+	} else if numOfInstsFromInst1 != 1 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to id inst1 should be 1, insted : %d",numOfInstsFromInst1 )
+		return
+	} else if numOfInstsFromInst2 != 1 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to id inst2 should be 1, insted : %d",numOfInstsFromInst2 )
+		return
+	} else if numOfInstsFromsVip1 != 1 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to secure vip1 should be 1, insted : %d",numOfInstsFromsVip1 )
+		return
+	} else if numOfInstsFromsVip2 != 2 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to secure vip2 should be 2, insted : %d",numOfInstsFromsVip2 )
+		return
 	}
-	log.Printf("Should exit now...")
-	return nil
+
+	discoveryCacheInstances , err := testdiscoveryCache.GetInstancesByVip("vip1")
+
+	if err != nil {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Error while trying to get instances from discovery cache: %v ", err)
+		return
+	}
+
+	if len(discoveryCacheInstances) != 3 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Should have gotten 3 instances with vip addrees vip1, instead got %d",
+			len(discoveryCacheInstances))
+		return
+	}
+	numOfInstsFromApp1 = 0
+	numOfInstsFromApp2 = 0
+	numOfInstsFromInst1 = 0
+	numOfInstsFromInst2 = 0
+	numOfInstsFromsVip1 = 0
+	numOfInstsFromsVip2 = 0
+	for _, inst := range discoveryCacheInstances {
+		if inst.Application == "APP1" {
+			numOfInstsFromApp1++
+		}
+		if inst.Application == "APP2" {
+			numOfInstsFromApp2++
+		}
+		if inst.HostName == "inst1" {
+			numOfInstsFromInst1++
+		}
+		if inst.HostName == "inst2" {
+			numOfInstsFromInst2++
+		}
+		if inst.SecVIPAddr == "svip1" {
+			numOfInstsFromsVip1++
+		}
+		if inst.SecVIPAddr == "svip2" {
+			numOfInstsFromsVip2++
+		}
+	}
+	if numOfInstsFromApp1 !=2 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to app1 should be 2, insted : %d",numOfInstsFromApp1 )
+	} else if numOfInstsFromApp2 != 1 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to app2 should be 1, insted : %d",numOfInstsFromApp2 )
+	} else if numOfInstsFromInst1 != 1 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to id inst1 should be 1, insted : %d",numOfInstsFromInst1 )
+	} else if numOfInstsFromInst2 != 1 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to id inst2 should be 1, insted : %d",numOfInstsFromInst2 )
+	} else if numOfInstsFromsVip1 != 1 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to secure vip1 should be 1, insted : %d",numOfInstsFromsVip1 )
+	} else if numOfInstsFromsVip2 != 2 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to secure vip2 should be 2, insted : %d",numOfInstsFromsVip2 )
+	}
+	t.Log("Successfully passed test GetInstancesByVipAddress..." )
+
+	// clean :
+	t.Log("************************************************************************************************")
+	t.Log("Calling tear dorwn function...")
+	e = tearDownTest(t)
+	if e != nil {
+		t.Errorf("Error during tear down :  : %v",e)
+	}
+	t.Log("Tear down cpmpleted succesfully")
+	t.Log("************************************************************************************************")
+	time.Sleep(30*time.Second)
+
+	t.Log("Test Ended Successfully")
+
+}
+
+func TestGetInstancesBySVipAddress(t *testing.T) {
+	e := setupTest(t)
+	if e != nil {
+		// send  quit channel :
+		quitHeartBeats <- struct{}{}
+		stopdiscoveryCacheChan <- struct{}{}
+		t.Errorf("Error during setup : %v",e)
+		return
+	}
+	t.Log("Successfully initialized discovery, discovery cache and registrator client. sleeping 30 seconds.")
+	t.Log("************************************************************************************************")
+	time.Sleep(30*time.Second)
+
+	t.Log("Testing  Get instances by secure vip address... ")
+	dicoveryInstances, err := testDiscovery.GetInstancesBySecVip("svip2")
+
+	if err != nil {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Error while trying to get instances from server into discovery: %v ", err)
+		return
+	}
+
+	if len(dicoveryInstances) != 3 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Should have gotten 3 instances with svip addrees svip2, instead got %d",len(dicoveryInstances))
+		return
+	}
+	numOfInstsFromApp1 := 0
+	numOfInstsFromApp2 := 0
+	numOfInstsFromInst1 := 0
+	numOfInstsFromInst2 := 0
+	numOfInstsFromVip1 := 0
+	numOfInstsFromsip2:= 0
+	for _, inst := range dicoveryInstances {
+
+		if inst.Application == "APP1" {
+			numOfInstsFromApp1++
+		}
+		if inst.Application == "APP2" {
+			numOfInstsFromApp2++
+		}
+		if inst.HostName == "inst1" {
+			numOfInstsFromInst1++
+		}
+		if inst.HostName == "inst2" {
+			numOfInstsFromInst2++
+		}
+		if inst.VIPAddr == "vip1" {
+			numOfInstsFromVip1++
+		}
+		if inst.VIPAddr == "vip2" {
+			numOfInstsFromsip2++
+		}
+	}
+	if numOfInstsFromApp1 !=1 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to app1 should be 1, insted : %d",numOfInstsFromApp1 )
+		return
+	} else if numOfInstsFromApp2 != 2 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to app2 should be 2, insted : %d",numOfInstsFromApp2 )
+		return
+	} else if numOfInstsFromInst1 != 1 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to id inst1 should be 1, insted : %d",numOfInstsFromInst1 )
+		return
+	} else if numOfInstsFromInst2 != 1 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to id inst2 should be 1, insted : %d",numOfInstsFromInst2 )
+		return
+	} else if numOfInstsFromVip1 != 2 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to vip1 should be 1, insted : %d",numOfInstsFromVip1 )
+		return
+	} else if numOfInstsFromsip2 != 1 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to vip2 should be 2, insted : %d",numOfInstsFromsip2 )
+		return
+	}
+
+	discoveryCacheInstances , err := testdiscoveryCache.GetInstancesBySecVip("svip2")
+
+	if err != nil {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Error while trying to get instances from discovery cache: %v ", err)
+		return
+	}
+
+	if len(discoveryCacheInstances) != 3 {
+		t.Errorf("Should have gotten 3 instances with svip addrees svip2, instead got %d",len(discoveryCacheInstances))
+		return
+	}
+	numOfInstsFromApp1 = 0
+	numOfInstsFromApp2 = 0
+	numOfInstsFromInst1 = 0
+	numOfInstsFromInst2 = 0
+	numOfInstsFromVip1 = 0
+	numOfInstsFromsip2 = 0
+	for _, inst := range discoveryCacheInstances {
+		if inst.Application == "APP1" {
+			numOfInstsFromApp1++
+		}
+		if inst.Application == "APP2" {
+			numOfInstsFromApp2++
+		}
+		if inst.HostName == "inst1" {
+			numOfInstsFromInst1++
+		}
+		if inst.HostName == "inst2" {
+			numOfInstsFromInst2++
+		}
+		if inst.VIPAddr == "vip1" {
+			numOfInstsFromVip1++
+		}
+		if inst.VIPAddr == "vip2" {
+			numOfInstsFromsip2++
+		}
+	}
+	if numOfInstsFromApp1 !=1 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to app1 should be 1, insted : %d",numOfInstsFromApp1 )
+		return
+	} else if numOfInstsFromApp2 != 2 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to app2 should be 2, insted : %d",numOfInstsFromApp2 )
+		return
+	} else if numOfInstsFromInst1 != 1 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to id inst1 should be 1, insted : %d",numOfInstsFromInst1 )
+		return
+	} else if numOfInstsFromInst2 != 1 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to id inst2 should be 1, insted : %d",numOfInstsFromInst2 )
+		return
+	} else if numOfInstsFromVip1 != 2 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to vip1 should be 1, insted : %d",numOfInstsFromVip1 )
+		return
+	} else if numOfInstsFromsip2 != 1 {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("Numer of instances belonging to vip2 should be 2, insted : %d",numOfInstsFromsip2 )
+		return
+	}
+	t.Log("Successfully passed test GetInstancesBySVipAddress..." )
+
+
+	// clean :
+	t.Log("************************************************************************************************")
+	t.Log("Calling tear dorwn function...")
+	e = tearDownTest(t)
+	if e != nil {
+		t.Errorf("Error during tear down :  : %v",e)
+		return
+	}
+	t.Log("Tear down cpmpleted succesfully")
+	t.Log("************************************************************************************************")
+	time.Sleep(30*time.Second)
+
+	t.Log("Test Ended Successfully")
 }

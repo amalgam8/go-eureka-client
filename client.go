@@ -98,6 +98,7 @@ func (cl *client) run(pollInterval time.Duration ,stopCh chan struct{}) {
 		case <-ticker.C:
 			cl.refresh(cl.handler)
 		case <-stopCh:
+			log.Printf("stop chan revieved. stop running discovery cache...")
 			//close(cl.)
 			return
 		}
@@ -105,17 +106,20 @@ func (cl *client) run(pollInterval time.Duration ,stopCh chan struct{}) {
 }
 
 func (cl *client) refresh(handler InstanceEventHandler) {
+	/*
 	log.Printf("inside refresh , client dict conatins : svipindex %v\n " +
 		"vipIndex : %v\n appIndex: %v\n", cl.dictionary.svipIndex,cl.dictionary.vipIndex,cl.dictionary.appNameIndex)
 	for k,_ := range cl.dictionary.svipIndex {
-		log.Printf("svip address: %s\n",k)
+		//log.Printf("svip address: %s\n",k)
 		insts := cl.dictionary.svipIndex[k]
+
 		for _,inst := range insts {
 			log.Printf("isnt svip is %s\n", inst.SecVIPAddr)
 			log.Printf("inst details = %v\n", inst)
 		}
-	}
 
+	}
+	*/
 	var dict dictionary
 	// diff is a map of key : instance_id, value: *instance
 	var diff map[string]*Instance
@@ -177,7 +181,7 @@ func (cl *client) fetchAll() (dictionary, error) {
 	if apps != nil && apps.Application != nil {
 		for _, app := range apps.Application {
 			for _, inst := range app.Instances {
-				log.Printf("id = %s",inst.ID)
+				//log.Printf("id = %s",inst.ID)
 				id, err := resolveInstanceID(inst)
 				if err != nil {
 					log.Printf("Failed to resolve instance ID. error: %s\n", err)
@@ -190,14 +194,14 @@ func (cl *client) fetchAll() (dictionary, error) {
 						instances = map[string]*Instance{}
 
 						dict.vipIndex[inst.VIPAddr] = instances
-						dict.vipIndex[app.Name][id] = inst
+						dict.vipIndex[inst.VIPAddr][id] = inst
 					}
 				}
 
 				if inst.SecVIPAddr != "" {
 					if dict.svipIndex[inst.SecVIPAddr] == nil {
 						dict.svipIndex[inst.SecVIPAddr] =  map[string]*Instance{}
-						dict.svipIndex[app.Name][id] = inst
+						dict.svipIndex[inst.SecVIPAddr][id] = inst
 					}
 				}
 				if inst.Application != "" {
@@ -212,7 +216,7 @@ func (cl *client) fetchAll() (dictionary, error) {
 
 	hashcode := calculateHashcode(dict.vipIndex)
 	log.Printf("A full fetch completed. %s\n", hashcode)
-	log.Printf("Returning the dict : %v", dict.appNameIndex)
+	//log.Printf("Returning the dict : %v", dict.appNameIndex)
 	return dict, nil
 }
 
@@ -315,7 +319,7 @@ func (cl *client) fetchApp(path string) (*Applications, error) {
 		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/%s", eurl, path), nil)
 		req.Header.Set("Accept", "application/json")
 		resp, err2 := cl.httpClient.Do(req)
-		log.Printf("response is %v", resp)
+		//log.Printf("response is %v", resp)
 		if err2 != nil {
 			err = err2
 			continue
@@ -343,7 +347,7 @@ func (cl *client) fetchInstance(appId,id string) (*Instance, error) {
 	path := "apps/" + appId + "/" + id
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/%s", eurl, path), nil)
-		log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
+		//log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
 		req.Header.Set("Accept", "application/json")
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
@@ -358,7 +362,7 @@ func (cl *client) fetchInstance(appId,id string) (*Instance, error) {
 		}
 		var inst InstanceWrapper
 		err2 = json.Unmarshal(body, &inst)
-		log.Printf("Instance gotten : %v", inst)
+		//log.Printf("Instance gotten : %v", inst)
 		if err2 != nil {
 			err = err2
 			continue
@@ -384,7 +388,7 @@ func (cl *client) fetchInstancesByVip(vipAddress string ) ([]*Instance, error){
 	path := "vips/" + vipAddress
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/%s", eurl, path), nil)
-		log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
+		//log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
 		req.Header.Set("Accept", "application/json")
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
@@ -415,7 +419,7 @@ func (cl *client) fetchInstancesBySVip(vipAddress string ) ([]*Instance, error){
 	path := "svips/" + vipAddress
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/%s", eurl, path), nil)
-		log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
+		//log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
 		req.Header.Set("Accept", "application/json")
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
@@ -445,8 +449,8 @@ func (cl* client) register(instance *Instance) error {
 	var err error
 	instanceWrapper := InstanceWrapper{Inst: instance}
 	body, err := json.Marshal(instanceWrapper)
-	str := fmt.Sprintf("%s", body)
-	log.Printf("body: %s",str)
+	//str := fmt.Sprintf("%s", body)
+	//log.Printf("body: %s",str)
 	r := bytes.NewReader(body)
 	appName := instance.Application
 	if err != nil {
@@ -455,11 +459,15 @@ func (cl* client) register(instance *Instance) error {
 	path := "apps/" + appName
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("POST", fmt.Sprintf("%s/%s", eurl, path), r)
-		log.Printf("request is : %s", fmt.Sprintf("%s/%s", eurl, path))
+		//log.Printf("request is : %s", fmt.Sprintf("%s/%s", eurl, path))
 		req.Header.Set("Content-Type", "application/json")
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
+			continue
+		}
+		if resp.StatusCode != 204 {
+			err = fmt.Errorf("response code unexcpeted: %d", resp.StatusCode)
 			continue
 		}
 		//defer resp.Body.Close()
@@ -470,7 +478,7 @@ func (cl* client) register(instance *Instance) error {
 			continue
 		}
 		*/
-		log.Printf("response for register req : %s", resp.Status)
+		//log.Printf("response for register req : %s", resp.Status)
 	}
 	return err
 }
@@ -483,14 +491,14 @@ func (cl* client) deregister(instance *Instance) error {
 	path := "apps/" + appName + "/" + instId
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("DELETE", fmt.Sprintf("%s/%s", eurl, path), nil)
-		log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
+		//log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
 		req.Header.Set("Accept", "application/json")
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
 			continue
 		}
-		log.Printf("response: %v", resp)
+		//log.Printf("response: %v", resp)
 		if resp.StatusCode != http.StatusOK {
 			err = fmt.Errorf("bad response for deregister request. response is %V",resp.Status)
 		}
@@ -507,14 +515,14 @@ func (cl* client) heartbeat(instance *Instance) error {
 	path := "apps/" + appName + "/" + instId
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("PUT", fmt.Sprintf("%s/%s", eurl, path), nil)
-		log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
+		//log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
 		req.Header.Set("Accept", "application/json")
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
 			continue
 		}
-		log.Printf("response: %v", resp)
+		//log.Printf("response: %v", resp)
 		if resp.StatusCode != http.StatusOK {
 			err = fmt.Errorf("bad response for heartbeat request. response is %V",resp.Status)
 		}
@@ -534,14 +542,14 @@ func (cl* client) setStatusForInstance(instance *Instance,status StatusType) err
 	path := "apps/" + appName + "/" + instId + "/status?value=" + fmt.Sprintf("%v",status)
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("PUT", fmt.Sprintf("%s/%s", eurl, path), nil)
-		log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
+		//log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
 		req.Header.Set("Accept", "application/json")
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
 			continue
 		}
-		log.Printf("response: %v", resp)
+		//log.Printf("response: %v", resp)
 		if resp.StatusCode != http.StatusOK {
 			err = fmt.Errorf("bad response for changing status request. response is %V",resp.Status)
 		}
@@ -558,14 +566,14 @@ func (cl* client) setMetadataKey(inst *Instance, key string, value string) error
 	path := "apps/" + appName + "/" + instId + "/metadata?" + key+ "=" + value
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("PUT", fmt.Sprintf("%s/%s", eurl, path), nil)
-		log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
+		//log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
 		req.Header.Set("Accept", "application/json")
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
 			continue
 		}
-		log.Printf("response: %v", resp)
+		//log.Printf("response: %v", resp)
 		if resp.StatusCode != http.StatusOK {
 			err = fmt.Errorf("bad response for changing metadata request. response is %V",resp.Status)
 		}

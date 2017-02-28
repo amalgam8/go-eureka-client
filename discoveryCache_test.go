@@ -36,6 +36,7 @@ func (m *mockHandler) OnUpdate(oldInst, newInst *Instance) {
 func (m* mockHandler )OnDelete(int *Instance){
 
 }
+
 func TestNewDiscoveryCache(t *testing.T){
 	// Create configuration for the discovery Cache :
 	conf := &Config{
