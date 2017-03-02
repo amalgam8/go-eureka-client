@@ -13,6 +13,9 @@
 //   limitations under the License.
 package go_eureka_client
 
+
+
+/*
 import (
 	"testing"
 	"time"
@@ -20,8 +23,8 @@ import (
 	"log"
 
 )
-
-
+*/
+/*
 
 func TestNewDiscovery(t *testing.T){
 	conf := &Config{
@@ -77,7 +80,7 @@ func TestNewDiscovery(t *testing.T){
 	}
 	log.Printf("inst id  = %s", vipInst.ID)
 	*/
-
+/*
 }
 
 func TestDiscovery_GetInstance(t *testing.T) {
@@ -141,3 +144,4 @@ func TestDiscovery_GetInstancesByVip(t *testing.T) {
 	}
 	log.Print(inst.HomePage)
 }
+*/

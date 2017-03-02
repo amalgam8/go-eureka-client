@@ -453,7 +453,7 @@ func TestGetInstancesBySVipAddress(t *testing.T) {
 
 	// clean :
 	t.Log("************************************************************************************************")
-	t.Log("Calling tear dorwn function...")
+	t.Log("Calling tear down function...")
 	e = tearDownTest(t)
 	if e != nil {
 		t.Errorf("Error during tear down :  : %v",e)
@@ -464,4 +464,289 @@ func TestGetInstancesBySVipAddress(t *testing.T) {
 	time.Sleep(30*time.Second)
 
 	t.Log("Test Ended Successfully")
+}
+
+func TestGetInstanceByAppId(t *testing.T){
+	e := setupTest(t)
+	if e != nil {
+		// send  quit channel :
+		quitHeartBeats <- struct{}{}
+		stopdiscoveryCacheChan <- struct{}{}
+		t.Errorf("Error during setup : %v",e)
+		return
+	}
+	t.Log("Successfully initialized discovery, discovery cache and registrator client. sleeping 30 seconds.")
+	t.Log("************************************************************************************************")
+	time.Sleep(30*time.Second)
+
+	t.Log("Testing  Get instances by application name... ")
+
+	/* Your Code here*/
+	dicoveryInstance, err := testDiscovery.GetInstance("app1","inst1")
+	if err != nil {
+		t.Errorf("Error while trying to fetch instance from server: %v", err)
+		quitHeartBeats <- struct{}{}
+		return
+	}
+	if dicoveryInstance.SecVIPAddr != "svip1" {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("svip of fetched instance should be svip1, instead : %s",dicoveryInstance.SecVIPAddr)
+	}
+	if dicoveryInstance.VIPAddr != "vip1" {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("vip of fetched instance should be vip1, instead : %s",dicoveryInstance.VIPAddr)
+		return
+	}
+	_, err = testDiscovery.GetInstance("app1","inst4")
+	if err == nil{
+		quitHeartBeats <- struct{}{}
+		t.Error("no instance with the id inst4 should be in the server")
+		return
+	}
+	_, err = testDiscovery.GetInstance("app5","inst2")
+	if err == nil{
+		quitHeartBeats <- struct{}{}
+		t.Error("no instance with the app5 should be in the server")
+		return
+	}
+	//t.Log("sleeping 30 seconds before trying to fetch instances from cache...")
+	//time.Sleep(30*time.Second)
+	discoveryCacheInstances , err := testdiscoveryCache.GetInstance("APP1","inst1")
+	if err != nil {
+		t.Errorf("Error while trying to fetch instance from server: %v", err)
+		quitHeartBeats <- struct{}{}
+		return
+	}
+	if discoveryCacheInstances == nil {
+		t.Error("Error while trying to fetch instance from server: , the isntance fetched is nill, and " +
+			"no error had been reported.")
+		quitHeartBeats <- struct{}{}
+		return
+	}
+	if discoveryCacheInstances.SecVIPAddr != "svip1" {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("svip of fetched instance should be svip1, instead : %s",dicoveryInstance.SecVIPAddr)
+	}
+
+	if discoveryCacheInstances.VIPAddr != "vip1" {
+		quitHeartBeats <- struct{}{}
+		t.Errorf("vip of fetched instance should be vip1, instead : %s",dicoveryInstance.VIPAddr)
+		return
+	}
+	_, err = testdiscoveryCache.GetInstance("app1","inst4")
+	if err == nil {
+		quitHeartBeats <- struct{}{}
+		t.Error("no instance with the id inst4 should be in the server")
+		return
+	}
+	_, err = testdiscoveryCache.GetInstance("app5","inst2")
+	if err == nil {
+		quitHeartBeats <- struct{}{}
+		t.Error("no instance with the app5 should be in the server")
+		return
+	}
+
+
+	t.Log("Successfully passed test Get instances by application name..." )
+
+	// clean :
+	t.Log("************************************************************************************************")
+	t.Log("Calling tear down function...")
+	e = tearDownTest(t)
+	if e != nil {
+		t.Errorf("Error during tear down :  : %v",e)
+		return
+	}
+	t.Log("Tear down cpmpleted succesfully")
+	t.Log("************************************************************************************************")
+	time.Sleep(30*time.Second)
+
+	t.Log("Test Ended Successfully")
+	return
+}
+
+func TestGetAllApplications(t *testing.T){
+	e := setupTest(t)
+	if e != nil {
+		// send  quit channel :
+		quitHeartBeats <- struct{}{}
+		stopdiscoveryCacheChan <- struct{}{}
+		t.Errorf("Error during setup : %v",e)
+		return
+	}
+	t.Log("Successfully initialized discovery, discovery cache and registrator client. sleeping 30 seconds.")
+	t.Log("************************************************************************************************")
+	time.Sleep(30*time.Second)
+
+	t.Log("Testing  Get all applications... ")
+
+	/* Your Code here*/
+	discoveryApps, err := testDiscovery.GetApplications()
+	if err != nil {
+		t.Errorf("Error while trying to fetch all applications from server: %v", err)
+		quitHeartBeats <- struct{}{}
+		return
+	}
+	appNameFlag := 0
+
+	for _,app :=range discoveryApps {
+		instNameFlag := 0
+		switch app.Name {
+		case "APP1" :
+			appNameFlag++
+			insts := app.Instances
+			for _,inst := range insts {
+				// verify inst1:
+				switch inst.HostName {
+				case "inst1" :
+					instNameFlag++
+					if inst.VIPAddr != "vip1" {
+						t.Errorf("for inst1 the vip address should be vip1. instead got" +
+							"%s", inst.VIPAddr)
+						quitHeartBeats <- struct{}{}
+						return
+					}
+					if inst.SecVIPAddr != "svip1" {
+						t.Errorf("for inst1 the svip address should be svip1. instead got" +
+							"%s", inst.SecVIPAddr)
+						quitHeartBeats <- struct{}{}
+						return
+					}
+				case "inst2" :
+					instNameFlag++
+					if inst.VIPAddr != "vip1" {
+						t.Errorf("for inst1 the vip address should be vip1. instead got" +
+							"%s", inst.VIPAddr)
+						quitHeartBeats <- struct{}{}
+						return
+					}
+					if inst.SecVIPAddr != "svip2" {
+						t.Errorf("for inst1 the svip address should be svip2. instead got" +
+							"%s", inst.SecVIPAddr)
+						quitHeartBeats <- struct{}{}
+						return
+					}
+				case "inst3" :
+					instNameFlag++
+					if inst.VIPAddr != "vip2" {
+						t.Errorf("for inst1 the vip address should be vip2. instead got" +
+							"%s", inst.VIPAddr)
+						quitHeartBeats <- struct{}{}
+						return
+					}
+					if inst.SecVIPAddr != "svip1" {
+						t.Errorf("for inst1 the svip address should be svip1. instead got" +
+							"%s", inst.SecVIPAddr)
+						quitHeartBeats <- struct{}{}
+						return
+					}
+				default:
+					t.Errorf("Unrecognized instance name %s", inst.HostName)
+					quitHeartBeats <- struct{}{}
+					return
+				}
+
+			}
+			if instNameFlag != 3 {
+				t.Errorf("Should be 3 instances registerd to app1, instead: %d", instNameFlag)
+				quitHeartBeats <- struct{}{}
+				return
+			}
+		case "APP2":
+			appNameFlag++
+			insts := app.Instances
+			for _,inst := range insts {
+				// verify inst1:
+				switch inst.HostName {
+				case "inst1" :
+					instNameFlag++
+					if inst.VIPAddr != "vip2" {
+						t.Errorf("for inst1 the vip address should be vip2. instead got" +
+							"%s", inst.VIPAddr)
+						quitHeartBeats <- struct{}{}
+						return
+					}
+					if inst.SecVIPAddr != "svip2" {
+						t.Errorf("for inst1 the svip address should be svip2. instead got" +
+							"%s", inst.SecVIPAddr)
+						quitHeartBeats <- struct{}{}
+						return
+					}
+				case "inst2" :
+					instNameFlag++
+					if inst.VIPAddr != "vip2" {
+						t.Errorf("for inst1 the vip address should be vip2. instead got" +
+							"%s", inst.VIPAddr)
+						quitHeartBeats <- struct{}{}
+						return
+					}
+					if inst.SecVIPAddr != "svip1" {
+						t.Errorf("for inst1 the svip address should be svip1. instead got" +
+							"%s", inst.SecVIPAddr)
+						quitHeartBeats <- struct{}{}
+						return
+					}
+				case "inst3" :
+					instNameFlag++
+					if inst.VIPAddr != "vip1" {
+						t.Errorf("for inst3 the vip address should be vip1. instead got" +
+							"%s", inst.VIPAddr)
+						quitHeartBeats <- struct{}{}
+						return
+					}
+					if inst.SecVIPAddr != "svip2" {
+						t.Errorf("for inst1 the svip address should be svip2. instead got" +
+							"%s", inst.SecVIPAddr)
+						quitHeartBeats <- struct{}{}
+						return
+					}
+				default:
+					t.Errorf("Unrecognized instance name %s", inst.HostName)
+					quitHeartBeats <- struct{}{}
+					return
+				}
+
+			}
+			if instNameFlag != 3 {
+				t.Errorf("Should be 3 instances registerd to app2, instead: %d", instNameFlag)
+				quitHeartBeats <- struct{}{}
+				return
+			}
+
+		default :
+			t.Errorf("Unrecognized application name fetched from server, %s",app.Name)
+			quitHeartBeats <- struct{}{}
+			return
+		}
+	}
+	if appNameFlag != 2 {
+		t.Errorf("Should be 2 apps registerd to server, instead: %d", appNameFlag)
+		quitHeartBeats <- struct{}{}
+		return
+	}
+
+	t.Log("Successfully passed test Get applications..." )
+
+	// clean :
+	t.Log("**************************************************************************************************")
+	t.Log("Calling tear down function...")
+	e = tearDownTest(t)
+	if e != nil {
+		t.Errorf("Error during tear down :  : %v",e)
+		return
+	}
+	t.Log("Tear down cpmpleted succesfully")
+	t.Log("**************************************************************************************************")
+	time.Sleep(30*time.Second)
+
+	t.Log("Test Ended Successfully")
+	return
+}
+
+func TestGetSpecificApplication(t *testing.T){
+	return
+}
+
+func TestChangeInstanceDetails(t *testing.T) {
+	return
 }

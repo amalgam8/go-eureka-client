@@ -12,7 +12,7 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 package go_eureka_client
-
+/*
 import (
 	"testing"
 	"time"
@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"log"
 )
-
+*/
 
 // mockHandler implements the interface InstanceEventHandler which is invoked when there is a change in the cache.
 type mockHandler string
@@ -36,7 +36,7 @@ func (m *mockHandler) OnUpdate(oldInst, newInst *Instance) {
 func (m* mockHandler )OnDelete(int *Instance){
 
 }
-
+/*
 func TestNewDiscoveryCache(t *testing.T){
 	// Create configuration for the discovery Cache :
 	conf := &Config{
@@ -92,3 +92,4 @@ func TestNewDiscoveryCache(t *testing.T){
 	}
 	log.Printf("inst id  = %s", vipInst.ID)
 }
+*/

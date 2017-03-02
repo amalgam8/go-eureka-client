@@ -52,7 +52,7 @@ func (r *discovery) GetApplication(appName string) (*Application, error) {
 		return nil, e
 	}
 	if len(apps.Application) > 1 {
-		log.Printf("Found more then one application instance with the same name, will return the first\n")
+		log.Print("Found more then one application instance with the same name, will return the first\n")
 	} else if len(apps.Application) < 1 {
 		return nil, fmt.Errorf("App with the name %s doesn't exist in eureka server", appName)
 	}

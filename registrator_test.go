@@ -13,14 +13,16 @@
 //   limitations under the License.
 package go_eureka_client
 
+
+/*
 import (
 	"time"
 	"testing"
 	"log"
 	"encoding/json"
 )
-
-
+*/
+/*
 func TestNewRegistrator(t *testing.T) {
 	conf := &Config{
 		ConnectTimeoutSeconds: 10 * time.Second,
@@ -112,3 +114,4 @@ func TestNewRegistrator(t *testing.T) {
 
 
 }
+*/

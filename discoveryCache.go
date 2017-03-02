@@ -69,7 +69,11 @@ func (d *discoveryCache) GetApplications() ([]*Application, error) {
 // GetInstance returns from the cache an instance object with the specified appId and id given as arguments.
 // appId - string representing application name. id - id  string of instance
 func (d *discoveryCache) GetInstance(appId, id string) (*Instance, error) {
-	return d.client.dictionary.appNameIndex[appId][id],nil
+	if val, ok := d.client.dictionary.appNameIndex[appId][id]; ok {
+		return val, nil
+	} else {
+		return nil, fmt.Errorf("Instance %s not found under application %s",id,appId )
+	}
 }
 
 // GetInstancesByVip returns from the cache all the instances with the given vipAddress.
