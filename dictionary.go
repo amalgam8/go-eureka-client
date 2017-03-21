@@ -11,23 +11,24 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
-package go_eureka_client
+
+//Package goEurekaClient Implements a go client that interacts with a eureka server
+package goEurekaClient
 
 //import "log"
 
 type dictionary struct {
 	appNameIndex map[string]map[string]*Instance
-	vipIndex map[string]map[string]*Instance
-	svipIndex map[string]map[string]*Instance
-
+	vipIndex     map[string]map[string]*Instance
+	svipIndex    map[string]map[string]*Instance
 }
 
-func newDictionary()(dictionary){
-	return dictionary{appNameIndex: map[string]map[string]*Instance{} , vipIndex: map[string]map[string]*Instance{},
-		svipIndex:map[string]map[string]*Instance{} }
+func newDictionary() dictionary {
+	return dictionary{appNameIndex: map[string]map[string]*Instance{}, vipIndex: map[string]map[string]*Instance{},
+		svipIndex: map[string]map[string]*Instance{}}
 }
 
-func (d* dictionary) onDelete(inst *Instance,id string, app *Application) () {
+func (d *dictionary) onDelete(inst *Instance, id string, app *Application) {
 	if vipInsts, ok := d.vipIndex[inst.VIPAddr]; ok {
 		delete(vipInsts, id)
 		if len(vipInsts) == 0 {
@@ -37,18 +38,18 @@ func (d* dictionary) onDelete(inst *Instance,id string, app *Application) () {
 	if svipInsts, ok := d.svipIndex[inst.SecVIPAddr]; ok {
 		delete(d.svipIndex[inst.SecVIPAddr], id)
 		if len(svipInsts) == 0 {
-			delete(d.svipIndex,inst.SecVIPAddr)
+			delete(d.svipIndex, inst.SecVIPAddr)
 		}
 	}
 	if appInsts, ok := d.appNameIndex[app.Name]; ok {
 		delete(appInsts, id)
 		if len(appInsts) == 0 {
-			delete(d.appNameIndex,app.Name)
+			delete(d.appNameIndex, app.Name)
 		}
 	}
 }
 
-func (d* dictionary) onAdd(inst *Instance,id string, app *Application)(){
+func (d *dictionary) onAdd(inst *Instance, id string, app *Application) {
 
 	if inst.VIPAddr != "" {
 		insts := d.vipIndex[inst.VIPAddr]
@@ -81,8 +82,7 @@ func (d* dictionary) onAdd(inst *Instance,id string, app *Application)(){
 
 }
 
-// TODO: what is the difference between add and delete methods ?
-func (d* dictionary) onUpdate(inst *Instance,id string, app *Application)(){
+func (d *dictionary) onUpdate(inst *Instance, id string, app *Application) {
 	if inst.VIPAddr != "" {
 		insts := d.vipIndex[inst.VIPAddr]
 		if insts == nil {
@@ -113,85 +113,76 @@ func (d* dictionary) onUpdate(inst *Instance,id string, app *Application)(){
 	}
 }
 
-func (d * dictionary) getApplication(appName string)*Application {
-	instancesMap,ok := d.appNameIndex[appName]
+func (d *dictionary) getApplication(appName string) *Application {
+	instancesMap, ok := d.appNameIndex[appName]
 	if !ok {
 		return nil
 	}
-	instancesArray := make([]*Instance,0)
+	var instancesArray []*Instance
 	for _, v := range instancesMap {
 		dc := v.deepCopy()
-		instancesArray = append(instancesArray,&dc);
+		instancesArray = append(instancesArray, &dc)
 	}
-	app := &Application{Name: appName ,
+	app := &Application{Name: appName,
 		Instances: instancesArray}
 	return app
 }
 
-func (d * dictionary) getApplications()[]*Application {
-	applicationsArray := make([]*Application,0)
+func (d *dictionary) getApplications() []*Application {
+	var applicationsArray []*Application
 	for appName, instancesMap := range d.appNameIndex {
-		instancesArray := make([]*Instance,0)
+		var instancesArray []*Instance
 		for _, v := range instancesMap {
 			dc := v.deepCopy()
-			instancesArray = append(instancesArray,&dc);
+			instancesArray = append(instancesArray, &dc)
 		}
-		app := &Application{Name: appName ,
+		app := &Application{Name: appName,
 			Instances: instancesArray}
-		applicationsArray = append(applicationsArray,app)
+		applicationsArray = append(applicationsArray, app)
 	}
 
 	return applicationsArray
 }
 
-func (d* dictionary) GetInstancesByVip(vipAddress string) ([]*Instance) {
-	instancesMap,ok := d.vipIndex[vipAddress]
+func (d *dictionary) GetInstancesByVip(vipAddress string) []*Instance {
+	instancesMap, ok := d.vipIndex[vipAddress]
 	if !ok {
 		return nil
 	}
-	instancesArray := make([]*Instance,0)
+	var instancesArray []*Instance
 	for _, v := range instancesMap {
 		dc := v.deepCopy()
-		instancesArray = append(instancesArray,&dc);
+		instancesArray = append(instancesArray, &dc)
 	}
 	return instancesArray
 }
 
-
-func (d* dictionary) GetInstancesBySecVip(svipAddress string) ([]*Instance) {
-	instancesMap,ok := d.svipIndex[svipAddress]
+func (d *dictionary) GetInstancesBySecVip(svipAddress string) []*Instance {
+	instancesMap, ok := d.svipIndex[svipAddress]
 	if !ok {
 		return nil
 	}
-	instancesArray := make([]*Instance,0)
+	var instancesArray []*Instance
 	for _, v := range instancesMap {
 		dc := v.deepCopy()
-		instancesArray = append(instancesArray,&dc);
+		instancesArray = append(instancesArray, &dc)
 	}
 	return instancesArray
 }
 
-func (d* dictionary) isEmpty() bool {
-	if len(d.appNameIndex) == 0 && len(d.svipIndex) == 0  && len(d.vipIndex) == 0 {
+func (d *dictionary) isEmpty() bool {
+	if len(d.appNameIndex) == 0 && len(d.svipIndex) == 0 && len(d.vipIndex) == 0 {
 		return true
 	}
 	return false
-	// TODO: Can there be an application with no instances, what is the satisfied condition ??
-	/*
-	for _, v := range d.appNameIndex {
-		if len(v) > 0 {
-			return false
-		}
-	}
-	return true
-	*/
+
 }
 
-func (d* dictionary) copyDictionary() dictionary {
-	service := dictionary{appNameIndex: map[string]map[string]*Instance{} , svipIndex:  map[string]map[string]*Instance{}, vipIndex:  map[string]map[string]*Instance{} }
+func (d *dictionary) copyDictionary() dictionary {
+	service := dictionary{appNameIndex: map[string]map[string]*Instance{}, svipIndex: map[string]map[string]*Instance{}, vipIndex: map[string]map[string]*Instance{}}
 	for appIndex, insts := range d.appNameIndex {
 		copyInsts := map[string]*Instance{}
-		for instName, inst := range insts{
+		for instName, inst := range insts {
 			copyInsts[instName] = inst
 		}
 		service.appNameIndex[appIndex] = copyInsts
@@ -199,7 +190,7 @@ func (d* dictionary) copyDictionary() dictionary {
 
 	for vipIndex, insts := range d.vipIndex {
 		copyInsts := map[string]*Instance{}
-		for instName, inst := range insts{
+		for instName, inst := range insts {
 			copyInsts[instName] = inst
 		}
 		service.vipIndex[vipIndex] = copyInsts
@@ -207,7 +198,7 @@ func (d* dictionary) copyDictionary() dictionary {
 
 	for svipIndex, insts := range d.svipIndex {
 		copyInsts := map[string]*Instance{}
-		for instName, inst := range insts{
+		for instName, inst := range insts {
 			copyInsts[instName] = inst
 		}
 		service.svipIndex[svipIndex] = copyInsts

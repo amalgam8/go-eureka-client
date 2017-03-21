@@ -11,7 +11,10 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
-package go_eureka_client
+
+//Package goEurekaClient Implements a go client that interacts with a eureka server
+package goEurekaClient
+
 /*
 import (
 	"testing"
@@ -26,16 +29,17 @@ import (
 // mockHandler implements the interface InstanceEventHandler which is invoked when there is a change in the cache.
 type mockHandler string
 
-func (m *mockHandler) OnAdd(inst *Instance){
+func (m *mockHandler) OnAdd(inst *Instance) {
 
 }
 
 func (m *mockHandler) OnUpdate(oldInst, newInst *Instance) {
 
 }
-func (m* mockHandler )OnDelete(int *Instance){
+func (m *mockHandler) OnDelete(int *Instance) {
 
 }
+
 /*
 func TestNewDiscoveryCache(t *testing.T){
 	// Create configuration for the discovery Cache :

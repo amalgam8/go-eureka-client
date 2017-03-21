@@ -12,21 +12,23 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-package go_eureka_client
+//Package goEurekaClient Implements a go client that interacts with a eureka server
+package goEurekaClient
 
 import (
-"crypto/tls"
-"encoding/json"
-"fmt"
-"io/ioutil"
-"log"
-"net/http"
-"net/url"
-"sort"
-"strings"
-"sync"
-"time"
 	"bytes"
+	"context"
+	"crypto/tls"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"net/url"
+	"sort"
+	"strings"
+	"sync"
+	"time"
 )
 
 const (
@@ -38,15 +40,15 @@ const (
 
 type client struct {
 	sync.Mutex
-	httpClient *http.Client
-	eurekaURLs []string
-	dictionary dictionary
+	httpClient   *http.Client
+	eurekaURLs   []string
+	dictionary   dictionary
 	versionDelta int64
-	handler InstanceEventHandler
+	handler      InstanceEventHandler
 }
 
 func newClient(config *Config, handler InstanceEventHandler) (*client, error) {
-	eurekaURLs ,err:=config. createUrlsList()
+	eurekaURLs, err := config.createUrlsList()
 	if eurekaURLs == nil {
 		return nil, err
 	}
@@ -84,12 +86,12 @@ func newClient(config *Config, handler InstanceEventHandler) (*client, error) {
 	cl := &client{
 		httpClient: hc,
 		eurekaURLs: urls,
-		handler: handler,
+		handler:    handler,
 	}
 	return cl, nil
 }
 
-func (cl *client) run(pollInterval time.Duration ,stopCh chan struct{}) {
+func (cl *client) run(pollInterval time.Duration, stopCh context.Context) {
 	cl.refresh(cl.handler)
 
 	ticker := time.NewTicker(pollInterval)
@@ -97,44 +99,28 @@ func (cl *client) run(pollInterval time.Duration ,stopCh chan struct{}) {
 		select {
 		case <-ticker.C:
 			cl.refresh(cl.handler)
-		case <-stopCh:
+		case <-stopCh.Done():
 			log.Printf("stop chan revieved. stop running discovery cache...")
-			//close(cl.)
 			return
 		}
 	}
 }
 
 func (cl *client) refresh(handler InstanceEventHandler) {
-	/*
-	log.Printf("inside refresh , client dict conatins : svipindex %v\n " +
-		"vipIndex : %v\n appIndex: %v\n", cl.dictionary.svipIndex,cl.dictionary.vipIndex,cl.dictionary.appNameIndex)
-	for k,_ := range cl.dictionary.svipIndex {
-		//log.Printf("svip address: %s\n",k)
-		insts := cl.dictionary.svipIndex[k]
 
-		for _,inst := range insts {
-			log.Printf("isnt svip is %s\n", inst.SecVIPAddr)
-			log.Printf("inst details = %v\n", inst)
-		}
-
-	}
-	*/
 	var dict dictionary
 	// diff is a map of key : instance_id, value: *instance
 	var diff map[string]*Instance
 	// If this is the 1st time then we need to retrieve the full registry,
 	// otherwise a delta could be sufficient
-	if  cl.dictionary.isEmpty() == false {
+	if cl.dictionary.isEmpty() == false {
 		// not first time :
-
 		dict, diff = cl.fetchDelta()
 	}
 
 	if dict.appNameIndex == nil && dict.vipIndex == nil && dict.svipIndex == nil {
 		// This means first time :
-
-		fetchdDict, err  := cl.fetchAll()
+		fetchdDict, err := cl.fetchAll()
 		if err != nil {
 			// TODO: what message to report?
 			return
@@ -145,8 +131,8 @@ func (cl *client) refresh(handler InstanceEventHandler) {
 		cl.versionDelta = 0
 	}
 
-	old_dict := cl.dictionary.copyDictionary()
-	if dict.appNameIndex != nil || dict.vipIndex != nil || dict.svipIndex!= nil {
+	oldDict := cl.dictionary.copyDictionary()
+	if dict.appNameIndex != nil || dict.vipIndex != nil || dict.svipIndex != nil {
 		cl.Lock()
 		cl.dictionary.vipIndex = dict.vipIndex
 		cl.dictionary.appNameIndex = dict.appNameIndex
@@ -159,10 +145,9 @@ func (cl *client) refresh(handler InstanceEventHandler) {
 		for name := range diff {
 			if diff[name].ActionType == actionAdded {
 				cl.handler.OnAdd(diff[name])
-			} else if diff[name].ActionType == actionModified{
-				// TODO: need to find old object
-				old_obj := old_dict.vipIndex[diff[name].VIPAddr][name]
-				cl.handler.OnUpdate(old_obj,diff[name])
+			} else if diff[name].ActionType == actionModified {
+				oldObj := oldDict.vipIndex[diff[name].VIPAddr][name]
+				cl.handler.OnUpdate(oldObj, diff[name])
 			} else if diff[name].ActionType == actionDeleted {
 				cl.handler.OnDelete(diff[name])
 			}
@@ -181,7 +166,6 @@ func (cl *client) fetchAll() (dictionary, error) {
 	if apps != nil && apps.Application != nil {
 		for _, app := range apps.Application {
 			for _, inst := range app.Instances {
-				//log.Printf("id = %s",inst.ID)
 				id, err := resolveInstanceID(inst)
 				if err != nil {
 					log.Printf("Failed to resolve instance ID. error: %s\n", err)
@@ -200,7 +184,7 @@ func (cl *client) fetchAll() (dictionary, error) {
 
 				if inst.SecVIPAddr != "" {
 					if dict.svipIndex[inst.SecVIPAddr] == nil {
-						dict.svipIndex[inst.SecVIPAddr] =  map[string]*Instance{}
+						dict.svipIndex[inst.SecVIPAddr] = map[string]*Instance{}
 						dict.svipIndex[inst.SecVIPAddr][id] = inst
 					}
 				}
@@ -216,7 +200,6 @@ func (cl *client) fetchAll() (dictionary, error) {
 
 	hashcode := calculateHashcode(dict.vipIndex)
 	log.Printf("A full fetch completed. %s\n", hashcode)
-	//log.Printf("Returning the dict : %v", dict.appNameIndex)
 	return dict, nil
 }
 
@@ -254,13 +237,13 @@ func (cl *client) fetchDelta() (dictionary, map[string]*Instance) {
 			inst.ID = id
 			switch inst.ActionType {
 			case actionDeleted:
-				dict.onDelete(inst,id, app )
+				dict.onDelete(inst, id, app)
 				deleted++
 			case actionAdded:
-				dict.onAdd(inst,id, app)
+				dict.onAdd(inst, id, app)
 				updated++
-			case  actionModified:
-				dict.onUpdate(inst,id, app)
+			case actionModified:
+				dict.onUpdate(inst, id, app)
 				updated++
 			default:
 				log.Printf("Unknown ActionType %s for instance %+v\n", inst.ActionType, inst)
@@ -289,7 +272,7 @@ func (cl *client) fetchApps(path string) (*Applications, error) {
 
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/%s", eurl, path), nil)
-		req.Header.Set("Accept", "application/json")
+		setJasonRequestHeader(req)
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
@@ -301,7 +284,7 @@ func (cl *client) fetchApps(path string) (*Applications, error) {
 			err = err2
 			continue
 		}
-		var appsList ApplicationsList
+		var appsList applicationsList
 		err2 = json.Unmarshal(body, &appsList)
 		if err2 != nil {
 			err = err2
@@ -317,9 +300,8 @@ func (cl *client) fetchApp(path string) (*Applications, error) {
 	var err error
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/%s", eurl, path), nil)
-		req.Header.Set("Accept", "application/json")
+		setJasonRequestHeader(req)
 		resp, err2 := cl.httpClient.Do(req)
-		//log.Printf("response is %v", resp)
 		if err2 != nil {
 			err = err2
 			continue
@@ -342,13 +324,12 @@ func (cl *client) fetchApp(path string) (*Applications, error) {
 	return nil, err
 }
 
-func (cl *client) fetchInstance(appId,id string) (*Instance, error) {
+func (cl *client) fetchInstance(appID, id string) (*Instance, error) {
 	var err error
-	path := "apps/" + appId + "/" + id
+	path := "apps/" + appID + "/" + id
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/%s", eurl, path), nil)
-		//log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
-		req.Header.Set("Accept", "application/json")
+		setJasonRequestHeader(req)
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
@@ -360,9 +341,8 @@ func (cl *client) fetchInstance(appId,id string) (*Instance, error) {
 			err = err2
 			continue
 		}
-		var inst InstanceWrapper
+		var inst instanceWrapper
 		err2 = json.Unmarshal(body, &inst)
-		//log.Printf("Instance gotten : %v", inst)
 		if err2 != nil {
 			err = err2
 			continue
@@ -372,24 +352,23 @@ func (cl *client) fetchInstance(appId,id string) (*Instance, error) {
 
 	return nil, err
 }
-func (cl *client) getListOfInstsFromAppList(appList ApplicationsList) []*Instance {
+func (cl *client) getListOfInstsFromAppList(appList applicationsList) []*Instance {
 	var instsToReturn []*Instance
 	apps := appList.Applications.Application
-	for _,app := range apps {
+	for _, app := range apps {
 		insts := app.Instances
-		for _,inst := range insts {
+		for _, inst := range insts {
 			instsToReturn = append(instsToReturn, inst)
 		}
 	}
 	return instsToReturn
 }
-func (cl *client) fetchInstancesByVip(vipAddress string ) ([]*Instance, error){
+func (cl *client) fetchInstancesByVip(vipAddress string) ([]*Instance, error) {
 	var err error
 	path := "vips/" + vipAddress
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/%s", eurl, path), nil)
-		//log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
-		req.Header.Set("Accept", "application/json")
+		setJasonRequestHeader(req)
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
@@ -401,9 +380,8 @@ func (cl *client) fetchInstancesByVip(vipAddress string ) ([]*Instance, error){
 			err = err2
 			continue
 		}
-		var appsList ApplicationsList
+		var appsList applicationsList
 		err2 = json.Unmarshal(body, &appsList)
-		//log.Printf("Instance gotten : %v", inst)
 		if err2 != nil {
 			err = err2
 			continue
@@ -414,13 +392,12 @@ func (cl *client) fetchInstancesByVip(vipAddress string ) ([]*Instance, error){
 
 	return nil, err
 }
-func (cl *client) fetchInstancesBySVip(vipAddress string ) ([]*Instance, error){
+func (cl *client) fetchInstancesBySVip(vipAddress string) ([]*Instance, error) {
 	var err error
 	path := "svips/" + vipAddress
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/%s", eurl, path), nil)
-		//log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
-		req.Header.Set("Accept", "application/json")
+		setJasonRequestHeader(req)
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
@@ -432,9 +409,8 @@ func (cl *client) fetchInstancesBySVip(vipAddress string ) ([]*Instance, error){
 			err = err2
 			continue
 		}
-		var appsList ApplicationsList
+		var appsList applicationsList
 		err2 = json.Unmarshal(body, &appsList)
-		//log.Printf("Instance gotten : %v", inst)
 		if err2 != nil {
 			err = err2
 			continue
@@ -445,12 +421,10 @@ func (cl *client) fetchInstancesBySVip(vipAddress string ) ([]*Instance, error){
 
 	return nil, err
 }
-func (cl* client) register(instance *Instance) error {
+func (cl *client) register(instance *Instance) error {
 	var err error
-	instanceWrapper := InstanceWrapper{Inst: instance}
+	instanceWrapper := instanceWrapper{Inst: instance}
 	body, err := json.Marshal(instanceWrapper)
-	//str := fmt.Sprintf("%s", body)
-	//log.Printf("body: %s",str)
 	r := bytes.NewReader(body)
 	appName := instance.Application
 	if err != nil {
@@ -459,7 +433,7 @@ func (cl* client) register(instance *Instance) error {
 	path := "apps/" + appName
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("POST", fmt.Sprintf("%s/%s", eurl, path), r)
-		//log.Printf("request is : %s", fmt.Sprintf("%s/%s", eurl, path))
+		//setJasonRequestHeader(req)
 		req.Header.Set("Content-Type", "application/json")
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
@@ -470,112 +444,106 @@ func (cl* client) register(instance *Instance) error {
 			err = fmt.Errorf("response code unexcpeted: %d", resp.StatusCode)
 			continue
 		}
-		//defer resp.Body.Close()
-		/*
-		body, err2 := ioutil.ReadAll(resp.Body)
-		if err2 != nil {
-			err = err2
-			continue
-		}
-		*/
-		//log.Printf("response for register req : %s", resp.Status)
+
 	}
 	return err
 }
 
-func (cl* client) deregister(instance *Instance) error {
+func (cl *client) deregister(instance *Instance) error {
 	var err error
-	appName :=instance.Application
-	// TODO: resolve when to take host name and when to take id ?
-	instId := instance.HostName
-	path := "apps/" + appName + "/" + instId
+	appName := instance.Application
+	instID, err := resolveInstanceID(instance)
+	if err != nil {
+		return fmt.Errorf("Failed to resolve instance ID. error: %s\n", err)
+	}
+	path := "apps/" + appName + "/" + instID
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("DELETE", fmt.Sprintf("%s/%s", eurl, path), nil)
-		//log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
-		req.Header.Set("Accept", "application/json")
+		setJasonRequestHeader(req)
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
 			continue
 		}
-		//log.Printf("response: %v", resp)
 		if resp.StatusCode != http.StatusOK {
-			err = fmt.Errorf("bad response for deregister request. response is %V",resp.Status)
+			err = fmt.Errorf("bad response for deregister request. response is %v", resp.Status)
 		}
 
 	}
 
 	return err
 }
-func (cl* client) heartbeat(instance *Instance) error {
+func (cl *client) heartbeat(instance *Instance) error {
 	var err error
-	appName :=instance.Application
-	// TODO: resolve when to take host name and when to take id ?
-	instId := instance.HostName
-	path := "apps/" + appName + "/" + instId
+	appName := instance.Application
+
+	instID, err := resolveInstanceID(instance)
+	if err != nil {
+		return fmt.Errorf("Failed to resolve instance ID. error: %s\n", err)
+	}
+
+	path := "apps/" + appName + "/" + instID
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("PUT", fmt.Sprintf("%s/%s", eurl, path), nil)
-		//log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
-		req.Header.Set("Accept", "application/json")
+		setJasonRequestHeader(req)
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
 			continue
 		}
-		//log.Printf("response: %v", resp)
 		if resp.StatusCode != http.StatusOK {
-			err = fmt.Errorf("bad response for heartbeat request. response is %V",resp.Status)
+			err = fmt.Errorf("bad response for heartbeat request. response is %v", resp.Status)
 		}
 
 	}
 	return err
 }
 
-func (cl* client) setStatusForInstance(instance *Instance,status StatusType) error {
-	if status != UP && status != DOWN && status != UNKNOWN && status != OUT_OF_SERVICE && status != STARTING {
+func (cl *client) setStatusForInstance(instance *Instance, status StatusType) error {
+	if status != UP && status != DOWN && status != UNKNOWN && status != OUTOFSERVICE && status != STARTING {
 		return fmt.Errorf("requested status %v is not valid", status)
 	}
 	var err error
-	appName :=instance.Application
-	// TODO: resolve when to take host name and when to take id ?
-	instId := instance.HostName
-	path := "apps/" + appName + "/" + instId + "/status?value=" + fmt.Sprintf("%v",status)
+	appName := instance.Application
+	instID, err := resolveInstanceID(instance)
+	if err != nil {
+		return fmt.Errorf("Failed to resolve instance ID. error: %s\n", err)
+	}
+	path := "apps/" + appName + "/" + instID + "/status?value=" + fmt.Sprintf("%v", status)
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("PUT", fmt.Sprintf("%s/%s", eurl, path), nil)
-		//log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
-		req.Header.Set("Accept", "application/json")
+		setJasonRequestHeader(req)
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
 			continue
 		}
-		//log.Printf("response: %v", resp)
 		if resp.StatusCode != http.StatusOK {
-			err = fmt.Errorf("bad response for changing status request. response is %V",resp.Status)
+			err = fmt.Errorf("bad response for changing status request. response is %v", resp.Status)
 		}
 
 	}
 	return err
 }
 
-func (cl* client) setMetadataKey(inst *Instance, key string, value string) error{
+func (cl *client) setMetadataKey(inst *Instance, key string, value string) error {
 	var err error
-	appName :=inst.Application
-	// TODO: resolve when to take host name and when to take id ?
-	instId := inst.HostName
-	path := "apps/" + appName + "/" + instId + "/metadata?" + key+ "=" + value
+	appName := inst.Application
+	instID, err := resolveInstanceID(inst)
+	if err != nil {
+		return fmt.Errorf("Failed to resolve instance ID. error: %s\n", err)
+	}
+	path := "apps/" + appName + "/" + instID + "/metadata?" + key + "=" + value
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("PUT", fmt.Sprintf("%s/%s", eurl, path), nil)
-		//log.Printf("request is : %s",fmt.Sprintf("%s/%s", eurl, path) )
-		req.Header.Set("Accept", "application/json")
+		setJasonRequestHeader(req)
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
 			continue
 		}
-		//log.Printf("response: %v", resp)
 		if resp.StatusCode != http.StatusOK {
-			err = fmt.Errorf("bad response for changing metadata request. response is %V",resp.Status)
+			err = fmt.Errorf("bad response for changing metadata request. response is %v", resp.Status)
 		}
 
 	}
@@ -639,7 +607,6 @@ func (cl *client) populateDiff(dict dictionary) map[string]*Instance {
 			for id, newInst := range newInsts {
 				diff[id] = newInst
 			}
-			//diff[vip] = struct{}{}
 		}
 	}
 
@@ -647,12 +614,12 @@ func (cl *client) populateDiff(dict dictionary) map[string]*Instance {
 	for vip := range cl.dictionary.vipIndex {
 		if _, ok := dict.vipIndex[vip]; !ok {
 
-			for id, delInsts := range  cl.dictionary.vipIndex[vip] {
+			for id, delInsts := range cl.dictionary.vipIndex[vip] {
 				diff[id] = delInsts
 			}
 		} else {
 			for id, inst := range cl.dictionary.vipIndex[vip] {
-				if _,ok := dict.vipIndex[vip][id] ; !ok {
+				if _, ok := dict.vipIndex[vip][id]; !ok {
 					diff[id] = inst
 				}
 			}
@@ -660,4 +627,8 @@ func (cl *client) populateDiff(dict dictionary) map[string]*Instance {
 	}
 
 	return diff
+}
+
+func setJasonRequestHeader(req *http.Request) {
+	req.Header.Set("Accept", "application/json")
 }

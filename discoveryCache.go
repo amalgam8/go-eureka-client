@@ -11,85 +11,88 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
-package go_eureka_client
+
+//Package goEurekaClient Implements a go client that interacts with a eureka server
+package goEurekaClient
 
 import (
-	"time"
+	"context"
 	"fmt"
+	"time"
 )
 
+// DiscoveryCache defines the eureka client discovery cache interface and actions :
 type DiscoveryCache interface {
 	Discovery
-	Run(stopCh chan struct{} )
+	Run(stopCh context.Context)
 }
 
 type discoveryCache struct {
-	client client
+	client       *client
 	pollInterval time.Duration
-
 }
 
 // NewDiscoveryCache creates a new client used for instances discovery with internal cache.
 // pollInterval defines the polling interval.
 // handler is used to get notification on instances. nil indicates that no notifications are needed.
-func NewDiscoveryCache(config *Config, pollInterval time.Duration, handler InstanceEventHandler) (DiscoveryCache, error){
+func NewDiscoveryCache(config *Config, pollInterval time.Duration, handler InstanceEventHandler) (DiscoveryCache, error) {
 
 	discoveryCacheClient, err := newClient(config, handler)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 
-	newDiscoveryCache :=  &discoveryCache{client: *discoveryCacheClient,
-		                             pollInterval: pollInterval,
-		                             }
+	newDiscoveryCache := &discoveryCache{client: discoveryCacheClient,
+		pollInterval: pollInterval,
+	}
 
-	return newDiscoveryCache,nil
+	return newDiscoveryCache, nil
 }
 
 // Run start running the cache.
-func (d *discoveryCache) Run(stopCh chan struct{} ) {
+func (d *discoveryCache) Run(stopCh context.Context) {
 	go d.client.run(d.pollInterval, stopCh)
 }
+
 // GetApplication returns an application instance from the cache with the appName specified as argument.
 func (d *discoveryCache) GetApplication(appName string) (*Application, error) {
 
 	app := d.client.dictionary.getApplication(appName)
 	if app == nil {
-		return nil, fmt.Errorf("Application Name %s not found",appName )
+		return nil, fmt.Errorf("Application Name %s not found", appName)
 	}
-	return app,nil
+	return app, nil
 }
 
 // GetApplications retrieves all applications from the cache and returns them inside an array.
 func (d *discoveryCache) GetApplications() ([]*Application, error) {
-	// TODO : check if there is a possible error
 	return d.client.dictionary.getApplications(), nil
 }
 
 // GetInstance returns from the cache an instance object with the specified appId and id given as arguments.
 // appId - string representing application name. id - id  string of instance
-func (d *discoveryCache) GetInstance(appId, id string) (*Instance, error) {
-	if val, ok := d.client.dictionary.appNameIndex[appId][id]; ok {
+func (d *discoveryCache) GetInstance(appID, id string) (*Instance, error) {
+	if val, ok := d.client.dictionary.appNameIndex[appID][id]; ok {
 		return val, nil
-	} else {
-		return nil, fmt.Errorf("Instance %s not found under application %s",id,appId )
 	}
+	return nil, fmt.Errorf("Instance %s not found under application %s", id, appID)
+
 }
 
 // GetInstancesByVip returns from the cache all the instances with the given vipAddress.
 func (d *discoveryCache) GetInstancesByVip(vipAddress string) ([]*Instance, error) {
 	instances := d.client.dictionary.GetInstancesByVip(vipAddress)
 	if instances == nil {
-		return nil, fmt.Errorf("vipAddress  %s not found",vipAddress )
+		return nil, fmt.Errorf("vipAddress  %s not found", vipAddress)
 	}
-	return instances,nil
+	return instances, nil
 }
 
 // GetInstancesBySecVip return from the cache all the instances with the given secured vip address.
 func (d *discoveryCache) GetInstancesBySecVip(secVipAddress string) ([]*Instance, error) {
 	instances := d.client.dictionary.GetInstancesBySecVip(secVipAddress)
 	if instances == nil {
-		return nil, fmt.Errorf("vipAddress  %s not found",secVipAddress )
+		return nil, fmt.Errorf("vipAddress  %s not found", secVipAddress)
 	}
-	return instances,nil
+	return instances, nil
 }

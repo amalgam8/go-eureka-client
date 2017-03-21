@@ -11,58 +11,58 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
-package go_eureka_client
 
+//Package goEurekaClient Implements a go client that interacts with a eureka server
+package goEurekaClient
 
+// Registrator type defines the eureka client registrator.
 type Registrator interface {
 	Register(*Instance) error
 	Deregister(*Instance) error
 	Heartbeat(*Instance) error
-	SetStatus(inst*Instance, status StatusType) error
+	SetStatus(inst *Instance, status StatusType) error
 	SetMetadataKey(inst *Instance, key string, value string) error
 }
 
 type registrator struct {
-	client client
+	client *client
 }
 
 // NewRegistrator creates a new client used for instance registration
-func NewRegistrator(config *Config,handler InstanceEventHandler) (Registrator, error){
+func NewRegistrator(config *Config, handler InstanceEventHandler) (Registrator, error) {
 	registratorClient, err := newClient(config, handler)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 
-	newRegistrator :=  &registrator{client: *registratorClient,
-	}
+	newRegistrator := &registrator{client: registratorClient}
 
-	return newRegistrator,nil
+	return newRegistrator, nil
 }
 
 // Register registers an instance in the registry.
-func (r *registrator) Register(instance *Instance)  error {
+func (r *registrator) Register(instance *Instance) error {
 	return r.client.register(instance)
 
 }
 
 // Deregister removes an instance from the registry.
-func (r *registrator) Deregister(instance *Instance)  error {
+func (r *registrator) Deregister(instance *Instance) error {
 	return r.client.deregister(instance)
 }
 
 // Heartbeat sends an heartbeat to the registry in order to verify its existence.
-func (r *registrator) Heartbeat(instance *Instance)  error {
+func (r *registrator) Heartbeat(instance *Instance) error {
 	return r.client.heartbeat(instance)
 
 }
 
 // SetStatus changes the status of an instance in the registry.
-func (r *registrator) SetStatus(instance *Instance,status StatusType)  error {
-	return r.client.setStatusForInstance(instance,status)
+func (r *registrator) SetStatus(instance *Instance, status StatusType) error {
+	return r.client.setStatusForInstance(instance, status)
 }
 
 // SetMetadataKey sets the metaDataKey for an instance in the registry.
-func (r *registrator) SetMetadataKey(inst *Instance, key string, value string)  error {
-	return r.client.setMetadataKey(inst,key,value)
+func (r *registrator) SetMetadataKey(inst *Instance, key string, value string) error {
+	return r.client.setMetadataKey(inst, key, value)
 }
-

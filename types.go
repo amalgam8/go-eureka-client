@@ -11,27 +11,26 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
-package go_eureka_client
+
+//Package goEurekaClient Implements a go client that interacts with a eureka server
+package goEurekaClient
 
 import (
 	"encoding/json"
 	"fmt"
 )
 
-
 const (
-	UP             StatusType = "UP"
-	DOWN           StatusType = "DOWN"
-	STARTING       StatusType = "STARTING"
-	OUT_OF_SERVICE StatusType = "OUT_OF_SERVICE"
-	UNKNOWN        StatusType = "UNKNOWN"
-)
-
-const (
-	defaultDurationInt uint32 = 90
-	metadataTags              = "amalgam8.tags"
-	extEureka                 = "eureka"
-	extVIP                    = "vipAddress"
+	// UP means the application instance is up.
+	UP StatusType = "UP"
+	// DOWN means the application instance is down.
+	DOWN StatusType = "DOWN"
+	// STARTING means the application instance is initializing .
+	STARTING StatusType = "STARTING"
+	// OUTOFSERVICE means the application instance is out of service.
+	OUTOFSERVICE StatusType = "OUT_OF_SERVICE"
+	// UNKNOWN means the application instance status is unknown.
+	UNKNOWN StatusType = "UNKNOWN"
 )
 
 // Port encapsulates information needed for a port information
@@ -40,7 +39,7 @@ type Port struct {
 	Value   interface{} `json:"$,omitempty"`
 }
 
-// DataCenterMetadata encapsulates information needed for a datacenter metadata information
+// DatacenterMetadata encapsulates information needed for a datacenter metadata information
 type DatacenterMetadata map[string]interface{}
 
 // DatacenterInfo encapsulates information needed for a datacenter information
@@ -85,7 +84,7 @@ type Instance struct {
 }
 
 // InstanceWrapper encapsulates information needed for a service instance registration
-type InstanceWrapper struct {
+type instanceWrapper struct {
 	Inst *Instance `json:"instance,omitempty"`
 }
 
@@ -102,57 +101,56 @@ func (ir *Instance) String() string {
 func (ir *Instance) deepCopy() Instance {
 	copyPort := Port{
 		Enabled: ir.Port.Enabled,
-		Value: ir.Port.Value,
+		Value:   ir.Port.Value,
 	}
 	copySecPort := Port{
 		Enabled: ir.SecPort.Enabled,
-		Value: ir.SecPort.Value,
+		Value:   ir.SecPort.Value,
 	}
 
 	copyDatacenter := DatacenterInfo{
-		Class: ir.Datacenter.Class,
+		Class:    ir.Datacenter.Class,
 		Metadata: ir.Datacenter.Metadata,
-		Name: ir.Datacenter.Name,
+		Name:     ir.Datacenter.Name,
 	}
 	copyLease := LeaseInfo{
-		DurationInt: ir.Lease.DurationInt,
-		LastRenewalTs: ir.Lease.LastRenewalTs,
+		DurationInt:    ir.Lease.DurationInt,
+		LastRenewalTs:  ir.Lease.LastRenewalTs,
 		RegistrationTs: ir.Lease.RegistrationTs,
-		RenewalInt: ir.Lease.RenewalInt,
-
+		RenewalInt:     ir.Lease.RenewalInt,
 	}
 
 	copyInst := Instance{
-		ID: ir.ID,
-		HostName: ir.HostName,
-		Application: ir.Application,
-		GroupName: ir.GroupName,
-		IPAddr: ir.IPAddr,
-		VIPAddr: ir.VIPAddr,
-		SecVIPAddr: ir.SecVIPAddr,
-		Status: ir.Status,
-		OvrStatus: ir.OvrStatus,
-		CountryID: ir.CountryID,
-		Port : &copyPort,
-		SecPort: &copySecPort,
-		HomePage: ir.HomePage,
-		StatusPage: ir.StatusPage,
-		HealthCheck: ir.HealthCheck,
-		Datacenter: &copyDatacenter,
-		Lease: &copyLease,
-		Metadata: ir.Metadata,
-		CordServer: ir.CordServer,
+		ID:            ir.ID,
+		HostName:      ir.HostName,
+		Application:   ir.Application,
+		GroupName:     ir.GroupName,
+		IPAddr:        ir.IPAddr,
+		VIPAddr:       ir.VIPAddr,
+		SecVIPAddr:    ir.SecVIPAddr,
+		Status:        ir.Status,
+		OvrStatus:     ir.OvrStatus,
+		CountryID:     ir.CountryID,
+		Port:          &copyPort,
+		SecPort:       &copySecPort,
+		HomePage:      ir.HomePage,
+		StatusPage:    ir.StatusPage,
+		HealthCheck:   ir.HealthCheck,
+		Datacenter:    &copyDatacenter,
+		Lease:         &copyLease,
+		Metadata:      ir.Metadata,
+		CordServer:    ir.CordServer,
 		LastUpdatedTs: ir.LastDirtyTs,
-		LastDirtyTs: ir.LastDirtyTs,
-		ActionType: ir.ActionType,
+		LastDirtyTs:   ir.LastDirtyTs,
+		ActionType:    ir.ActionType,
 	}
 	return copyInst
 }
 
-
+//StatusType defines status of the application instances.
 type StatusType string
 
-
+//DataCenterType defines the DataCenter
 type DataCenterType string
 
 // InstanceEventHandler can handle notifications for events that happen
@@ -163,7 +161,6 @@ type InstanceEventHandler interface {
 	OnUpdate(oldInst, newInst *Instance)
 	OnDelete(int *Instance)
 }
-
 
 // Application is an array of instances
 type Application struct {
@@ -257,6 +254,6 @@ func (apps *Applications) UnmarshalJSON(b []byte) error {
 }
 
 // ApplicationsList is a list of application objects
-type ApplicationsList struct {
+type applicationsList struct {
 	Applications *Applications `json:"applications,omitempty"`
 }
