@@ -59,7 +59,7 @@ func createClients() error {
 		ServerPort:     8080,  // default 8080
 		PreferSameZone: false, // default false
 		RetriesCount:   3,     // default 3
-		UseJSON:        true,  // default false (means XML)
+		UseJSON:        true,  // default true
 	}
 	var m mockHandler = "test"
 	var e error

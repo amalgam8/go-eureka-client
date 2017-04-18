@@ -95,11 +95,11 @@ precommit: format verify
 #---------
 .PHONY: build build.registry build.controller build.sidecar build.k8srules build.cli compile clean
 
-build: build.registry build.controller build.sidecar build.k8srules
+build: build.main
 
-build.registry:
-	@echo "--> building registry"
-	@go build $(BUILDFLAGS) -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(REGISTRY_APP_NAME) ./cmd/registry/
+build.main:
+	@echo "--> building main"
+	# @go build $(BUILDFLAGS) -ldflags '$(LDFLAGS)' -o 
 
 compile:
 	@echo "--> compiling packages"

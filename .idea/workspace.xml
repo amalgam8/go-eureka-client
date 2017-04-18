@@ -3,21 +3,12 @@
   <component name="ChangeListManager">
     <list default="true" id="1933401f-a1b5-47d7-84f6-8d21d49df80a" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/amazon_dcinfo.go" afterPath="$PROJECT_DIR$/amazon_dcinfo.go" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Makefile" afterPath="$PROJECT_DIR$/Makefile" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/client.go" afterPath="$PROJECT_DIR$/client.go" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/config.go" afterPath="$PROJECT_DIR$/config.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dctype_resolver.go" afterPath="$PROJECT_DIR$/dctype_resolver.go" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dictionary.go" afterPath="$PROJECT_DIR$/dictionary.go" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dictionary_test.go" afterPath="$PROJECT_DIR$/dictionary_test.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/discovery.go" afterPath="$PROJECT_DIR$/discovery.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/discoveryCache.go" afterPath="$PROJECT_DIR$/discoveryCache.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/discoveryCache_test.go" afterPath="$PROJECT_DIR$/discoveryCache_test.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/discovery_test.go" afterPath="$PROJECT_DIR$/discovery_test.go" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/go_eureka_client_test.go" afterPath="$PROJECT_DIR$/go_eureka_client_test.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/registrator.go" afterPath="$PROJECT_DIR$/registrator.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/registrator_test.go" afterPath="$PROJECT_DIR$/registrator_test.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/softlayer_dcinfo.go" afterPath="$PROJECT_DIR$/softlayer_dcinfo.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/types.go" afterPath="$PROJECT_DIR$/types.go" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -46,8 +37,8 @@
       <file leaf-file-name="go_eureka_client_test.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/go_eureka_client_test.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="612">
-              <caret line="743" column="55" lean-forward="false" selection-start-line="743" selection-start-column="55" selection-end-line="743" selection-end-column="55" />
+            <state relative-caret-position="314">
+              <caret line="61" column="54" lean-forward="false" selection-start-line="61" selection-start-column="54" selection-end-line="61" selection-end-column="54" />
               <folding>
                 <element signature="e#800#840#0" expanded="true" />
               </folding>
@@ -55,11 +46,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="config.go" pinned="false" current-in-tab="true">
+      <file leaf-file-name="config.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/config.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="540">
-              <caret line="48" column="62" lean-forward="false" selection-start-line="48" selection-start-column="62" selection-end-line="48" selection-end-column="62" />
+            <state relative-caret-position="476">
+              <caret line="36" column="15" lean-forward="false" selection-start-line="36" selection-start-column="8" selection-end-line="36" selection-end-column="15" />
               <folding>
                 <element signature="e#719#790#0" expanded="true" />
               </folding>
@@ -67,21 +58,21 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="context.go" pinned="false" current-in-tab="false">
-        <entry file="file:///usr/local/go/src/context/context.go">
+      <file leaf-file-name="discoveryCache_test.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/discoveryCache_test.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="648">
-              <caret line="228" column="63" lean-forward="false" selection-start-line="228" selection-start-column="53" selection-end-line="228" selection-end-column="63" />
+            <state relative-caret-position="-318">
+              <caret line="14" column="83" lean-forward="false" selection-start-line="14" selection-start-column="83" selection-end-line="14" selection-end-column="83" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="discoveryCache_test.go" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/discoveryCache_test.go">
+      <file leaf-file-name="dictionary_test.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/dictionary_test.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="252">
-              <caret line="14" column="83" lean-forward="false" selection-start-line="14" selection-start-column="83" selection-end-line="14" selection-end-column="83" />
+            <state relative-caret-position="5172">
+              <caret line="293" column="0" lean-forward="true" selection-start-line="293" selection-start-column="0" selection-end-line="293" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -90,8 +81,18 @@
       <file leaf-file-name="registrator.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/registrator.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="306">
-              <caret line="17" column="58" lean-forward="false" selection-start-line="17" selection-start-column="58" selection-end-line="17" selection-end-column="58" />
+            <state relative-caret-position="312">
+              <caret line="27" column="11" lean-forward="false" selection-start-line="27" selection-start-column="11" selection-end-line="27" selection-end-column="11" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="dictionary.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/dictionary.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="312">
+              <caret line="19" column="87" lean-forward="false" selection-start-line="19" selection-start-column="87" selection-end-line="19" selection-end-column="87" />
               <folding />
             </state>
           </provider>
@@ -100,28 +101,18 @@
       <file leaf-file-name="types.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/types.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="954">
+            <state relative-caret-position="906">
               <caret line="86" column="6" lean-forward="false" selection-start-line="86" selection-start-column="6" selection-end-line="86" selection-end-column="6" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Makefile" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Makefile">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2546">
-              <caret line="153" column="0" lean-forward="true" selection-start-line="153" selection-start-column="0" selection-end-line="153" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="client.go" pinned="false" current-in-tab="false">
+      <file leaf-file-name="client.go" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/client.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="348">
-              <caret line="412" column="37" lean-forward="false" selection-start-line="412" selection-start-column="23" selection-end-line="412" selection-end-column="37" />
+            <state relative-caret-position="-858">
+              <caret line="269" column="0" lean-forward="true" selection-start-line="269" selection-start-column="0" selection-end-line="269" selection-end-column="0" />
               <folding>
                 <element signature="e#719#865#0" expanded="true" />
               </folding>
@@ -132,7 +123,7 @@
       <file leaf-file-name="dctype_resolver.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/dctype_resolver.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="324">
+            <state relative-caret-position="306">
               <caret line="31" column="5" lean-forward="false" selection-start-line="31" selection-start-column="5" selection-end-line="31" selection-end-column="5" />
               <folding />
             </state>
@@ -142,7 +133,7 @@
       <file leaf-file-name="discoveryCache.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/discoveryCache.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="90">
+            <state relative-caret-position="60">
               <caret line="26" column="9" lean-forward="false" selection-start-line="26" selection-start-column="9" selection-end-line="26" selection-end-column="9" />
               <folding>
                 <element signature="e#719#755#0" expanded="true" />
@@ -159,7 +150,6 @@
       <find>check</find>
       <find>build</find>
       <find>int</find>
-      <find>log</find>
       <find>TODO</find>
       <find>vendor</find>
       <find>GOFILES</find>
@@ -167,6 +157,11 @@
       <find>run</find>
       <find>accept</find>
       <find>setJasonRequestHeader</find>
+      <find>log</find>
+      <find>debug</find>
+      <find>dictionary</find>
+      <find>config</find>
+      <find>UseJSON</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -182,19 +177,19 @@
         <option value="$PROJECT_DIR$/test_eureka.sh" />
         <option value="$PROJECT_DIR$/amazon_dcinfo.go" />
         <option value="$PROJECT_DIR$/dctype_resolver.go" />
-        <option value="$PROJECT_DIR$/dictionary_test.go" />
         <option value="$PROJECT_DIR$/discovery_test.go" />
         <option value="$PROJECT_DIR$/discoveryCache_test.go" />
         <option value="$PROJECT_DIR$/registrator_test.go" />
         <option value="$PROJECT_DIR$/softlayer_dcinfo.go" />
-        <option value="$PROJECT_DIR$/dictionary.go" />
         <option value="$PROJECT_DIR$/discovery.go" />
         <option value="$PROJECT_DIR$/registrator.go" />
         <option value="$PROJECT_DIR$/discoveryCache.go" />
-        <option value="$PROJECT_DIR$/go_eureka_client_test.go" />
         <option value="$PROJECT_DIR$/types.go" />
-        <option value="$PROJECT_DIR$/client.go" />
+        <option value="$PROJECT_DIR$/dictionary_test.go" />
+        <option value="$PROJECT_DIR$/dictionary.go" />
+        <option value="$PROJECT_DIR$/go_eureka_client_test.go" />
         <option value="$PROJECT_DIR$/config.go" />
+        <option value="$PROJECT_DIR$/client.go" />
       </list>
     </option>
   </component>
@@ -226,6 +221,7 @@
     </navigator>
     <panes>
       <pane id="Scope" />
+      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -240,7 +236,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -375,25 +370,21 @@
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/amazon_dcinfo.go</url>
           <line>15</line>
-          <properties />
           <option name="timeStamp" value="5" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/discoveryCache.go</url>
           <line>17</line>
-          <properties />
           <option name="timeStamp" value="6" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/go_eureka_client_test.go</url>
           <line>19</line>
-          <properties />
           <option name="timeStamp" value="7" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/config.go</url>
           <line>17</line>
-          <properties />
           <option name="timeStamp" value="8" />
         </line-breakpoint>
       </breakpoints>
@@ -404,9 +395,99 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/go_eureka_client_test.go">
       <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="13374">
+          <caret line="743" column="55" lean-forward="false" selection-start-line="743" selection-start-column="55" selection-end-line="743" selection-end-column="55" />
+          <folding>
+            <element signature="e#800#840#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config.go">
+      <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#719#790#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/go/src/context/context.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4104">
+          <caret line="228" column="63" lean-forward="false" selection-start-line="228" selection-start-column="53" selection-end-line="228" selection-end-column="63" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/discoveryCache_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="252">
+          <caret line="14" column="83" lean-forward="false" selection-start-line="14" selection-start-column="83" selection-end-line="14" selection-end-column="83" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/registrator.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="306">
+          <caret line="17" column="58" lean-forward="false" selection-start-line="17" selection-start-column="58" selection-end-line="17" selection-end-column="58" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/types.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1494">
+          <caret line="86" column="6" lean-forward="false" selection-start-line="86" selection-start-column="6" selection-end-line="86" selection-end-column="6" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Makefile">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2754">
+          <caret line="153" column="0" lean-forward="true" selection-start-line="153" selection-start-column="0" selection-end-line="153" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/client.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="7164">
+          <caret line="412" column="37" lean-forward="false" selection-start-line="412" selection-start-column="23" selection-end-line="412" selection-end-column="37" />
+          <folding>
+            <element signature="e#719#865#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dctype_resolver.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="486">
+          <caret line="31" column="5" lean-forward="false" selection-start-line="31" selection-start-column="5" selection-end-line="31" selection-end-column="5" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/discoveryCache.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="468">
+          <caret line="26" column="9" lean-forward="false" selection-start-line="26" selection-start-column="9" selection-end-line="26" selection-end-column="9" />
+          <folding>
+            <element signature="e#719#755#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/go_eureka_client_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#800#840#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -446,7 +527,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="12906">
           <caret line="731" column="12" lean-forward="false" selection-start-line="731" selection-start-column="12" selection-end-line="731" selection-end-column="12" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -490,7 +570,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3744">
           <caret line="208" column="24" lean-forward="false" selection-start-line="208" selection-start-column="24" selection-end-line="208" selection-end-column="24" />
-          <folding />
+          <folding>
+            <element signature="e#719#865#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -498,7 +580,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
+          <folding>
+            <element signature="e#800#840#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -530,7 +614,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="13158">
           <caret line="731" column="12" lean-forward="false" selection-start-line="731" selection-start-column="12" selection-end-line="731" selection-end-column="12" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -591,7 +674,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="12906">
           <caret line="731" column="12" lean-forward="false" selection-start-line="731" selection-start-column="12" selection-end-line="731" selection-end-column="12" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -599,14 +681,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="252">
           <caret line="14" column="83" lean-forward="true" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="83" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/dictionary_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="252">
-          <caret line="14" column="83" lean-forward="false" selection-start-line="14" selection-start-column="83" selection-end-line="14" selection-end-column="83" />
           <folding />
         </state>
       </provider>
@@ -623,7 +697,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="252">
           <caret line="14" column="83" lean-forward="false" selection-start-line="14" selection-start-column="83" selection-end-line="14" selection-end-column="83" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -631,14 +704,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="252">
           <caret line="14" column="83" lean-forward="false" selection-start-line="14" selection-start-column="83" selection-end-line="14" selection-end-column="83" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/dictionary.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="252">
-          <caret line="131" column="44" lean-forward="false" selection-start-line="131" selection-start-column="44" selection-end-line="131" selection-end-column="44" />
           <folding />
         </state>
       </provider>
@@ -655,31 +720,15 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Makefile">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2546">
+        <state relative-caret-position="2754">
           <caret line="153" column="0" lean-forward="true" selection-start-line="153" selection-start-column="0" selection-end-line="153" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/registrator.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
-          <caret line="17" column="58" lean-forward="false" selection-start-line="17" selection-start-column="58" selection-end-line="17" selection-end-column="58" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/discoveryCache_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="252">
-          <caret line="14" column="83" lean-forward="false" selection-start-line="14" selection-start-column="83" selection-end-line="14" selection-end-column="83" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file:///usr/local/go/src/context/context.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="648">
+        <state relative-caret-position="3996">
           <caret line="228" column="63" lean-forward="false" selection-start-line="228" selection-start-column="53" selection-end-line="228" selection-end-column="63" />
           <folding />
         </state>
@@ -687,7 +736,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/discoveryCache.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
+        <state relative-caret-position="60">
           <caret line="26" column="9" lean-forward="false" selection-start-line="26" selection-start-column="9" selection-end-line="26" selection-end-column="9" />
           <folding>
             <element signature="e#719#755#0" expanded="true" />
@@ -695,19 +744,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/go_eureka_client_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="612">
-          <caret line="743" column="55" lean-forward="false" selection-start-line="743" selection-start-column="55" selection-end-line="743" selection-end-column="55" />
-          <folding>
-            <element signature="e#800#840#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/dctype_resolver.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="324">
+        <state relative-caret-position="306">
           <caret line="31" column="5" lean-forward="false" selection-start-line="31" selection-start-column="5" selection-end-line="31" selection-end-column="5" />
           <folding />
         </state>
@@ -715,28 +754,70 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/types.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="954">
+        <state relative-caret-position="906">
           <caret line="86" column="6" lean-forward="false" selection-start-line="86" selection-start-column="6" selection-end-line="86" selection-end-column="6" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/client.go">
+    <entry file="file://$PROJECT_DIR$/dictionary.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="348">
-          <caret line="412" column="37" lean-forward="false" selection-start-line="412" selection-start-column="23" selection-end-line="412" selection-end-column="37" />
+        <state relative-caret-position="312">
+          <caret line="19" column="87" lean-forward="false" selection-start-line="19" selection-start-column="87" selection-end-line="19" selection-end-column="87" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/registrator.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="312">
+          <caret line="27" column="11" lean-forward="false" selection-start-line="27" selection-start-column="11" selection-end-line="27" selection-end-column="11" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dictionary_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5172">
+          <caret line="293" column="0" lean-forward="true" selection-start-line="293" selection-start-column="0" selection-end-line="293" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/discoveryCache_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-318">
+          <caret line="14" column="83" lean-forward="false" selection-start-line="14" selection-start-column="83" selection-end-line="14" selection-end-column="83" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/go_eureka_client_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="314">
+          <caret line="61" column="54" lean-forward="false" selection-start-line="61" selection-start-column="54" selection-end-line="61" selection-end-column="54" />
           <folding>
-            <element signature="e#719#865#0" expanded="true" />
+            <element signature="e#800#840#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/config.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="540">
-          <caret line="48" column="62" lean-forward="false" selection-start-line="48" selection-start-column="62" selection-end-line="48" selection-end-column="62" />
+        <state relative-caret-position="476">
+          <caret line="36" column="15" lean-forward="false" selection-start-line="36" selection-start-column="8" selection-end-line="36" selection-end-column="15" />
           <folding>
             <element signature="e#719#790#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/client.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-858">
+          <caret line="269" column="0" lean-forward="true" selection-start-line="269" selection-start-column="0" selection-end-line="269" selection-end-column="0" />
+          <folding>
+            <element signature="e#719#865#0" expanded="true" />
           </folding>
         </state>
       </provider>

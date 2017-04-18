@@ -45,6 +45,7 @@ type client struct {
 	dictionary   dictionary
 	versionDelta int64
 	handler      InstanceEventHandler
+	UseJSON	     bool
 }
 
 func newClient(config *Config, handler InstanceEventHandler) (*client, error) {
@@ -87,11 +88,12 @@ func newClient(config *Config, handler InstanceEventHandler) (*client, error) {
 		httpClient: hc,
 		eurekaURLs: urls,
 		handler:    handler,
+		UseJSON:    config.UseJSON,
 	}
 	return cl, nil
 }
 
-func (cl *client) run(pollInterval time.Duration, stopCh context.Context) {
+func (cl *client) run(pollInterval time.Duration, context context.Context) {
 	cl.refresh(cl.handler)
 
 	ticker := time.NewTicker(pollInterval)
@@ -99,7 +101,7 @@ func (cl *client) run(pollInterval time.Duration, stopCh context.Context) {
 		select {
 		case <-ticker.C:
 			cl.refresh(cl.handler)
-		case <-stopCh.Done():
+		case <-context.Done():
 			log.Printf("stop chan revieved. stop running discovery cache...")
 			return
 		}
@@ -108,7 +110,7 @@ func (cl *client) run(pollInterval time.Duration, stopCh context.Context) {
 
 func (cl *client) refresh(handler InstanceEventHandler) {
 
-	var dict dictionary
+	var dict *dictionary
 	// diff is a map of key : instance_id, value: *instance
 	var diff map[string]*Instance
 	// If this is the 1st time then we need to retrieve the full registry,
@@ -118,7 +120,7 @@ func (cl *client) refresh(handler InstanceEventHandler) {
 		dict, diff = cl.fetchDelta()
 	}
 
-	if dict.appNameIndex == nil && dict.vipIndex == nil && dict.svipIndex == nil {
+	if dict == nil || (dict.appNameIndex == nil && dict.vipIndex == nil && dict.svipIndex == nil) {
 		// This means first time :
 		fetchdDict, err := cl.fetchAll()
 		if err != nil {
@@ -155,11 +157,11 @@ func (cl *client) refresh(handler InstanceEventHandler) {
 	}
 }
 
-func (cl *client) fetchAll() (dictionary, error) {
+func (cl *client) fetchAll() (*dictionary, error) {
 	apps, err := cl.fetchApps("apps")
 	if err != nil {
 		log.Printf("Faild to update full registry. %s\n", err)
-		return cl.dictionary, err
+		return &cl.dictionary, err
 	}
 
 	dict := newDictionary()
@@ -200,20 +202,20 @@ func (cl *client) fetchAll() (dictionary, error) {
 
 	hashcode := calculateHashcode(dict.vipIndex)
 	log.Printf("A full fetch completed. %s\n", hashcode)
-	return dict, nil
+	return &dict, nil
 }
 
-func (cl *client) fetchDelta() (dictionary, map[string]*Instance) {
+func (cl *client) fetchDelta() (*dictionary, map[string]*Instance) {
 	apps, err := cl.fetchApps("apps/delta")
 	if err != nil {
 		log.Printf("Faild to update delta. %s\n", err)
 
-		return dictionary{}, nil
+		return &dictionary{}, nil
 	}
 
 	if apps == nil || apps.VersionDelta == -1 {
 		log.Println("Delta update is not supported")
-		return dictionary{}, nil
+		return &dictionary{}, nil
 	}
 
 	diff := map[string]*Instance{}
@@ -221,7 +223,7 @@ func (cl *client) fetchDelta() (dictionary, map[string]*Instance) {
 	// If we have the latest version, no need to do anything
 	if apps.VersionDelta == cl.versionDelta {
 		log.Printf("Delta update was skipped, because we have the latest version (%d)", apps.VersionDelta)
-		return cl.dictionary, diff
+		return &cl.dictionary, diff
 	}
 
 	dict := cl.dictionary.copyDictionary()
@@ -231,19 +233,19 @@ func (cl *client) fetchDelta() (dictionary, map[string]*Instance) {
 			id, err := resolveInstanceID(inst)
 			if err != nil {
 				log.Printf("Failed to resolve instance ID. error: %s\n", err)
-				return dictionary{}, nil
+				return &dictionary{}, nil
 			}
 
 			inst.ID = id
 			switch inst.ActionType {
 			case actionDeleted:
-				dict.onDelete(inst, id, app)
+				dict.Delete(inst, id, app)
 				deleted++
 			case actionAdded:
-				dict.onAdd(inst, id, app)
+				dict.Add(inst, id, app)
 				updated++
 			case actionModified:
-				dict.onUpdate(inst, id, app)
+				dict.Update(inst, id, app)
 				updated++
 			default:
 				log.Printf("Unknown ActionType %s for instance %+v\n", inst.ActionType, inst)
@@ -257,7 +259,7 @@ func (cl *client) fetchDelta() (dictionary, map[string]*Instance) {
 	hashcode := calculateHashcode(dict.vipIndex)
 	if apps.Hashcode != hashcode {
 		log.Printf("Failed to update delta (local: %s, remote %s). A full update is required\n", hashcode, apps.Hashcode)
-		return dictionary{}, nil
+		return &dictionary{}, nil
 	}
 
 	cl.versionDelta = apps.VersionDelta
@@ -272,7 +274,7 @@ func (cl *client) fetchApps(path string) (*Applications, error) {
 
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/%s", eurl, path), nil)
-		setJasonRequestHeader(req)
+		cl.setJasonRequestHeader(req,"Accept")
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
@@ -300,7 +302,7 @@ func (cl *client) fetchApp(path string) (*Applications, error) {
 	var err error
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/%s", eurl, path), nil)
-		setJasonRequestHeader(req)
+		cl.setJasonRequestHeader(req,"Accept")
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
@@ -329,7 +331,7 @@ func (cl *client) fetchInstance(appID, id string) (*Instance, error) {
 	path := "apps/" + appID + "/" + id
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/%s", eurl, path), nil)
-		setJasonRequestHeader(req)
+		cl.setJasonRequestHeader(req,"Accept")
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
@@ -368,7 +370,7 @@ func (cl *client) fetchInstancesByVip(vipAddress string) ([]*Instance, error) {
 	path := "vips/" + vipAddress
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/%s", eurl, path), nil)
-		setJasonRequestHeader(req)
+		cl.setJasonRequestHeader(req,"Accept")
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
@@ -397,7 +399,7 @@ func (cl *client) fetchInstancesBySVip(vipAddress string) ([]*Instance, error) {
 	path := "svips/" + vipAddress
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/%s", eurl, path), nil)
-		setJasonRequestHeader(req)
+		cl.setJasonRequestHeader(req,"Accept")
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
@@ -433,8 +435,7 @@ func (cl *client) register(instance *Instance) error {
 	path := "apps/" + appName
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("POST", fmt.Sprintf("%s/%s", eurl, path), r)
-		//setJasonRequestHeader(req)
-		req.Header.Set("Content-Type", "application/json")
+		cl.setJasonRequestHeader(req,"Content-Type")
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
@@ -459,7 +460,7 @@ func (cl *client) deregister(instance *Instance) error {
 	path := "apps/" + appName + "/" + instID
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("DELETE", fmt.Sprintf("%s/%s", eurl, path), nil)
-		setJasonRequestHeader(req)
+		cl.setJasonRequestHeader(req,"Accept")
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
@@ -485,7 +486,7 @@ func (cl *client) heartbeat(instance *Instance) error {
 	path := "apps/" + appName + "/" + instID
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("PUT", fmt.Sprintf("%s/%s", eurl, path), nil)
-		setJasonRequestHeader(req)
+		cl.setJasonRequestHeader(req, "Accept")
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
@@ -512,7 +513,7 @@ func (cl *client) setStatusForInstance(instance *Instance, status StatusType) er
 	path := "apps/" + appName + "/" + instID + "/status?value=" + fmt.Sprintf("%v", status)
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("PUT", fmt.Sprintf("%s/%s", eurl, path), nil)
-		setJasonRequestHeader(req)
+		cl.setJasonRequestHeader(req,"Accept")
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
@@ -536,7 +537,7 @@ func (cl *client) setMetadataKey(inst *Instance, key string, value string) error
 	path := "apps/" + appName + "/" + instID + "/metadata?" + key + "=" + value
 	for _, eurl := range cl.eurekaURLs {
 		req, _ := http.NewRequest("PUT", fmt.Sprintf("%s/%s", eurl, path), nil)
-		setJasonRequestHeader(req)
+		cl.setJasonRequestHeader(req,"Accept")
 		resp, err2 := cl.httpClient.Do(req)
 		if err2 != nil {
 			err = err2
@@ -582,7 +583,7 @@ func calculateHashcode(dict map[string]map[string]*Instance) string {
 	return hashcode
 }
 
-func (cl *client) populateDiff(dict dictionary) map[string]*Instance {
+func (cl *client) populateDiff(dict *dictionary) map[string]*Instance {
 	if dict.vipIndex == nil && dict.svipIndex == nil && dict.appNameIndex == nil {
 		return nil
 	}
@@ -629,6 +630,9 @@ func (cl *client) populateDiff(dict dictionary) map[string]*Instance {
 	return diff
 }
 
-func setJasonRequestHeader(req *http.Request) {
-	req.Header.Set("Accept", "application/json")
+func (cl *client) setJasonRequestHeader(req *http.Request, key string) {
+	if cl.UseJSON {
+		req.Header.Set(key, "application/json")
+	}
+	// TODO: ADD xml support.
 }

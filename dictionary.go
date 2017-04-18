@@ -15,20 +15,33 @@
 //Package goEurekaClient Implements a go client that interacts with a eureka server
 package goEurekaClient
 
-//import "log"
+type instanceMap map[string]map[string]*Instance
+
+// Dictionary interface defines the methods to be used for the eureka client dictionary
+type Dictionary interface {
+	Delete(inst *Instance, id string, app *Application)
+	Add(inst *Instance, id string, app *Application)
+	Update(inst *Instance, id string, app *Application)
+	getApplication(appName string) *Application
+	getApplications() []*Application
+	GetInstancesByVip(vipAddress string) []*Instance
+	GetInstancesBySecVip(svipAddress string) []*Instance
+	isEmpty() bool
+	copyDictionary() dictionary
+}
 
 type dictionary struct {
-	appNameIndex map[string]map[string]*Instance
-	vipIndex     map[string]map[string]*Instance
-	svipIndex    map[string]map[string]*Instance
+	appNameIndex instanceMap
+	vipIndex     instanceMap
+	svipIndex    instanceMap
 }
 
 func newDictionary() dictionary {
-	return dictionary{appNameIndex: map[string]map[string]*Instance{}, vipIndex: map[string]map[string]*Instance{},
-		svipIndex: map[string]map[string]*Instance{}}
+	return dictionary{appNameIndex: instanceMap{}, vipIndex: instanceMap{},
+		svipIndex: instanceMap{}}
 }
 
-func (d *dictionary) onDelete(inst *Instance, id string, app *Application) {
+func (d *dictionary) Delete(inst *Instance, id string, app *Application) {
 	if vipInsts, ok := d.vipIndex[inst.VIPAddr]; ok {
 		delete(vipInsts, id)
 		if len(vipInsts) == 0 {
@@ -49,7 +62,7 @@ func (d *dictionary) onDelete(inst *Instance, id string, app *Application) {
 	}
 }
 
-func (d *dictionary) onAdd(inst *Instance, id string, app *Application) {
+func (d *dictionary) Add(inst *Instance, id string, app *Application) {
 
 	if inst.VIPAddr != "" {
 		insts := d.vipIndex[inst.VIPAddr]
@@ -82,7 +95,7 @@ func (d *dictionary) onAdd(inst *Instance, id string, app *Application) {
 
 }
 
-func (d *dictionary) onUpdate(inst *Instance, id string, app *Application) {
+func (d *dictionary) Update(inst *Instance, id string, app *Application) {
 	if inst.VIPAddr != "" {
 		insts := d.vipIndex[inst.VIPAddr]
 		if insts == nil {
@@ -178,14 +191,14 @@ func (d *dictionary) isEmpty() bool {
 
 }
 
-func (d *dictionary) copyDictionary() dictionary {
-	service := dictionary{appNameIndex: map[string]map[string]*Instance{}, svipIndex: map[string]map[string]*Instance{}, vipIndex: map[string]map[string]*Instance{}}
+func (d *dictionary) copyDictionary() *dictionary {
+	dict := dictionary{appNameIndex: map[string]map[string]*Instance{}, svipIndex: map[string]map[string]*Instance{}, vipIndex: map[string]map[string]*Instance{}}
 	for appIndex, insts := range d.appNameIndex {
 		copyInsts := map[string]*Instance{}
 		for instName, inst := range insts {
 			copyInsts[instName] = inst
 		}
-		service.appNameIndex[appIndex] = copyInsts
+		dict.appNameIndex[appIndex] = copyInsts
 	}
 
 	for vipIndex, insts := range d.vipIndex {
@@ -193,7 +206,7 @@ func (d *dictionary) copyDictionary() dictionary {
 		for instName, inst := range insts {
 			copyInsts[instName] = inst
 		}
-		service.vipIndex[vipIndex] = copyInsts
+		dict.vipIndex[vipIndex] = copyInsts
 	}
 
 	for svipIndex, insts := range d.svipIndex {
@@ -201,8 +214,8 @@ func (d *dictionary) copyDictionary() dictionary {
 		for instName, inst := range insts {
 			copyInsts[instName] = inst
 		}
-		service.svipIndex[svipIndex] = copyInsts
+		dict.svipIndex[svipIndex] = copyInsts
 	}
-	return service
+	return &dict
 
 }

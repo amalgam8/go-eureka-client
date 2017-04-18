@@ -26,15 +26,15 @@ import (
 
 // Config struct defines configurations of the eureka client in order to interact with the server.
 type Config struct {
-	ConnectTimeoutSeconds time.Duration       `json:"connectionTimeoutSeconds"` // default 10s
-	UseDNSForServiceUrls  bool                `json:"useDNSForServiceUrls"`     // default false
-	DNSDiscoveryZone      string              `json:"dnsDiscoveryZone"`
-	ServerDNSName         string              `json:"serverDNSName"`
-	ServiceUrls           map[string][]string `json:"serviceUrls"`    // map from Zone to array of server Urls
-	ServerPort            int                 `json:"serverPort"`     // default 8080
-	PreferSameZone        bool                `json:"preferSameZone"` // default false
-	RetriesCount          int                 `json:"retriesCount"`   // default 3
-	UseJSON               bool                `json:"useJSON"`        // default false (means XML)
+	ConnectTimeoutSeconds time.Duration       `json:"connection_timeout_seconds"` // default 10s
+	UseDNSForServiceUrls  bool                `json:"use_dns_for_service_urls"`     // default false
+	DNSDiscoveryZone      string              `json:"dns_discovery_zone"`
+	ServerDNSName         string              `json:"server_dns_name"`
+	ServiceUrls           map[string][]string `json:"service_urls"`    // map from Zone to array of server Urls
+	ServerPort            int                 `json:"server_port"`     // default 8080
+	PreferSameZone        bool                `json:"prefer_same_zone"` // default false
+	RetriesCount          int                 `json:"retries_count"`   // default 3
+	UseJSON               bool                `json:"use_json"`        // default True
 }
 
 // NewConfigFromFile reads JSON data from file and creates from it a config object.
@@ -48,15 +48,14 @@ func NewConfigFromFile(fileName string) (*Config, error) {
 	if err = jsonParser.Decode(conf); err != nil {
 		return nil, fmt.Errorf("parsing config file %v", err.Error())
 	}
-	// For debugging :
-	//fmt.Printf("%v %s %s", conf.ServerPort, conf.ServerPort, conf.RetriesCount)
+
 	return conf, nil
 }
 
 //createUrlsList creates an array of urls from the ServiceUrls map according to the following settings:
 func (c *Config) createUrlsList() ([]string, error) {
 	if c.ServiceUrls == nil {
-		return nil, errors.New("$EUREKA_SERVICE_URLS must be defined")
+		return nil, errors.New("Service URLs must be defined")
 	}
 	urls := []string{}
 	indMap := map[int]string{}

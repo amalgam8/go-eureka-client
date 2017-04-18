@@ -86,7 +86,7 @@ func TestOnDelete(t *testing.T) {
 		"len of svipIndex = %d ", len(testDict.appNameIndex["app1"]), len(testDict.vipIndex["132.60.60.10"]), len(testDict.svipIndex["142.20.1.3"]))
 
 	app1 := Application{Name: "app1"}
-	testDict.onDelete(instsApp["inst1"], "inst1", &app1)
+	testDict.Delete(instsApp["inst1"], "inst1", &app1)
 	if len(testDict.appNameIndex["app1"]) != 2 || len(testDict.vipIndex["132.60.60.10"]) != 2 || len(testDict.svipIndex["142.20.1.3"]) != 2 {
 		t.Errorf("Length of dict didn't change after delete. len of appInd = %d, len of vipIndex = %d , "+
 			"len of svipIndex = %d ", len(testDict.appNameIndex["app1"]), len(testDict.vipIndex["132.60.60.10"]), len(testDict.svipIndex["142.20.1.3"]))
@@ -100,7 +100,7 @@ func TestOnDelete(t *testing.T) {
 	if _, ok := testDict.svipIndex["142.20.1.3"]["inst1"]; ok {
 		t.Error("inst1 wasn't deleted from svipIndex")
 	}
-	testDict.onDelete(instsApp["inst2"], "inst2", &app1)
+	testDict.Delete(instsApp["inst2"], "inst2", &app1)
 	if len(testDict.appNameIndex["app1"]) != 1 || len(testDict.vipIndex["132.60.60.10"]) != 1 || len(testDict.svipIndex["142.20.1.3"]) != 1 {
 		t.Errorf("Length of dict didn't change after delete. len of appInd = %d, len of vipIndex = %d , "+
 			"len of svipIndex = %d ", len(testDict.appNameIndex["app1"]), len(testDict.vipIndex["132.60.60.10"]), len(testDict.svipIndex["142.20.1.3"]))
@@ -115,7 +115,7 @@ func TestOnDelete(t *testing.T) {
 		t.Error("inst2 wasn't deleted from svipIndex")
 	}
 
-	testDict.onDelete(instsApp["inst3"], "inst3", &app1)
+	testDict.Delete(instsApp["inst3"], "inst3", &app1)
 	if len(testDict.appNameIndex) != 0 || len(testDict.vipIndex) != 0 || len(testDict.svipIndex) != 0 {
 		t.Errorf("Length of dict didn't change after delete. len of appInd = %d, len of vipIndex = %d , "+
 			"len of svipIndex = %d ", len(testDict.appNameIndex), len(testDict.vipIndex), len(testDict.svipIndex))
@@ -140,7 +140,7 @@ func TestOnAdd(t *testing.T) {
 		Lease:       &LeaseInfo{},
 	}
 	app1 := Application{Name: "app1"}
-	testDict.onAdd(instToAdd, "new_inst", &app1)
+	testDict.Add(instToAdd, "new_inst", &app1)
 	if len(testDict.appNameIndex["app1"]) != 4 || len(testDict.vipIndex["132.60.60.10"]) != 4 || len(testDict.svipIndex["142.20.1.3"]) != 4 {
 		t.Errorf("Length of dict didn't change after Add. len of appInd = %d, len of vipIndex = %d , "+
 			"len of svipIndex = %d ", len(testDict.appNameIndex["app1"]), len(testDict.vipIndex["132.60.60.10"]), len(testDict.svipIndex["142.20.1.3"]))
@@ -171,7 +171,7 @@ func TestOnAdd(t *testing.T) {
 	t.Logf("len of appInd = %d, len of vipIndex = %d , "+
 		"len of svipIndex = %d ", len(testDict.appNameIndex["app1"]), len(testDict.vipIndex["132.60.60.10"]), len(testDict.svipIndex["142.20.1.3"]))
 
-	testDict.onAdd(instToAdd2, "new_inst2", &app1)
+	testDict.Add(instToAdd2, "new_inst2", &app1)
 	t.Log(testDict.vipIndex["132.60.60.10"])
 	t.Logf("*******************************")
 	t.Log(testDict.vipIndex["132.60.60.55"])
@@ -270,9 +270,9 @@ func TestIsEmpty(t *testing.T) {
 		t.Errorf("should be Empty")
 	}
 	app1 := Application{Name: "app1"}
-	testDict.onDelete(instsApp["inst1"], "inst1", &app1)
-	testDict.onDelete(instsApp["inst2"], "inst2", &app1)
-	testDict.onDelete(instsApp["inst3"], "inst3", &app1)
+	testDict.Delete(instsApp["inst1"], "inst1", &app1)
+	testDict.Delete(instsApp["inst2"], "inst2", &app1)
+	testDict.Delete(instsApp["inst3"], "inst3", &app1)
 	if !testDict.isEmpty() {
 		t.Errorf("should be Empty")
 	}
